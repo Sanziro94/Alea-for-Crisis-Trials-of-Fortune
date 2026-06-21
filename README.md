@@ -1,4 +1,4 @@
-# Alea-for-Crisis-Trial-of-Fortune
+# Alea for Crisis : Trial-of-Fortune
 ### Pre-Release
 Welcome back with One-codex-team Studios (tm), this is our first game , made in C and within the help  of the raylib componenent.
 Our game it's an adventure within ******  world , taking part of dungeons , dices , luck and skill , all in one.
