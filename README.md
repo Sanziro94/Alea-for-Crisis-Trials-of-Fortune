@@ -1,5 +1,6 @@
 ###Pre-Release-Alea-for-Crisis-Trial-of-Fortune
-A beginner game with raylib , new to C , exploring the possibilities for now
-This will be a turn-based game with a lot of characters from different time periods, 
-spanning from Middle Ages to Futuristic eras.
-It's currently under development, it will be 2D and it'll have a lot of cool dice mechanics.
+Welcome back with One-codex-team Studios (tm), this is our first game , made in C and within the help  of the raylib componenent.
+Our game it's an adventure within ******  world , taking part of dungeons , dices , luck and skill , all in one.
+The story isn't complete , because of our lack in knwoledge we try our best to complete our gameplay vision first and then hire couple of friends for graphical and texture compartement
+# Installation
+Coming progress , let us cook 
