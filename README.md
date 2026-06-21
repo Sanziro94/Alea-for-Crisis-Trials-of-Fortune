@@ -1,4 +1,4 @@
-# Pre-Release-Alea-for-Crisis-Trial-of-Fortune
+###Pre-Release-Alea-for-Crisis-Trial-of-Fortune
 A beginner game with raylib , new to C , exploring the possibilities for now
 This will be a turn-based game with a lot of characters from different time periods, 
 spanning from Middle Ages to Futuristic eras.
