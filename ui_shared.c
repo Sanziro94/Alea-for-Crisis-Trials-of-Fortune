@@ -17,7 +17,9 @@ struct CharacterUI characterButtons[4] = {
     {"Cyborg",    16 + 3*196, 510, 180, 80, {{"Skill C1"}, {"Skill C2"}, {"Skill C3"}, {"Skill C4"}, {"Skill C5"}, {"Skill C6"}}}
 };
 
-int itemCount = 0;
+struct ObjectUI borsa[5];
+int tipiOggettiInBorsa = 5;
+
 
 void InitGameData(void) {
     // Mercenary
@@ -39,6 +41,20 @@ void InitGameData(void) {
             characterButtons[i].skills[j].logic = (Skill){characterButtons[i].skills[j].name, SKILL_NORMAL_DAMAGE, 5 + j, true, STAT_HP};
         }
     }
+    // Assegnazione coordinate spaziali dei rettangoli per gli Oggetti
+    for (int i = 0; i < 5; i++) {
+        borsa[i].x = 40 + (i % 3) * 240; 
+        borsa[i].y = 420 + (i / 3) * 80; 
+        borsa[i].width = 220;
+        borsa[i].height = 60;
+        borsa[i].idOggetto = i; 
+        snprintf(borsa[i].name, sizeof(borsa[i].name), "%s", objectTable[i].name);
+        if (i == 0) {
+            borsa[i].quantita = 2; 
+        } else {
+            borsa[i].quantita = 1;
+        }
+    }
 }
 
 void UpdateMenuLogic(Vector2 mousePos, int* menuState, int* sceltaPersonaggio, Character* enemy, char* battleLog, int maxLogLen) {
@@ -46,7 +62,18 @@ void UpdateMenuLogic(Vector2 mousePos, int* menuState, int* sceltaPersonaggio, C
         *menuState = 7;
         return;
     }
-
+    bool tuttiMorti = true;
+    for (int i = 0; i < 4; i++) {
+        if (characterButtons[i].logic.stats[STAT_HP] > 0 ) {
+            tuttiMorti = false;
+            break;
+        }   
+    }
+    if (tuttiMorti && *menuState != 7)
+    {
+        *menuState = 7;
+        return;
+    }
     // Gestione dello stato di Clash isolato (Stato 8)
     if (*menuState == 8) {
         bool clashFinito = ActionClash(&characterButtons[*sceltaPersonaggio].logic, enemy, battleLog, maxLogLen);
@@ -66,10 +93,12 @@ void UpdateMenuLogic(Vector2 mousePos, int* menuState, int* sceltaPersonaggio, C
         }
         case 1: { 
             for (int i = 0; i < 4; i++) {
-                if (CheckCollisionPointRec(mousePos, (Rectangle){ characterButtons[i].x, characterButtons[i].y, characterButtons[i].width, characterButtons[i].height }) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                    *sceltaPersonaggio = i;
-                    *menuState = 2;
-                }   
+                if (characterButtons[i].logic.stats[STAT_HP] > 0) {
+                    if (CheckCollisionPointRec(mousePos, (Rectangle){ characterButtons[i].x, characterButtons[i].y, characterButtons[i].width, characterButtons[i].height }) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                        *sceltaPersonaggio = i;
+                        *menuState = 2;
+                    }
+                }
             }
             break;
         }
@@ -110,35 +139,51 @@ void UpdateMenuLogic(Vector2 mousePos, int* menuState, int* sceltaPersonaggio, C
         }
         case 3: {
             for (int i = 0; i < 4; i++) {
-                if (CheckCollisionPointRec(mousePos, (Rectangle){ characterButtons[i].x, characterButtons[i].y, characterButtons[i].width, characterButtons[i].height }) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                if (characterButtons[i].logic.stats[STAT_HP] > 0) {
+                    if (CheckCollisionPointRec(mousePos, (Rectangle){ characterButtons[i].x, characterButtons[i].y, characterButtons[i].width, characterButtons[i].height }) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
                     ActionGuard(&characterButtons[i].logic, battleLog, maxLogLen);
                     EnemyTurn(enemy, &characterButtons[i].logic, battleLog, maxLogLen);
                     *menuState = 0;
+                    }
                 }
             }
             break;
         }
         case 4: {
             for (int i = 0; i < 4; i++) {
-                if (CheckCollisionPointRec(mousePos, (Rectangle){ characterButtons[i].x, characterButtons[i].y, characterButtons[i].width, characterButtons[i].height }) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                if (characterButtons[i].logic.stats[STAT_HP] > 0) {
+                    if (CheckCollisionPointRec(mousePos, (Rectangle){ characterButtons[i].x, characterButtons[i].y, characterButtons[i].width, characterButtons[i].height }) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
                     *sceltaPersonaggio = i;
                     *menuState = 5;
+                    }
                 }
             }
             break;
         }
         case 5: {
-            if (itemCount == 0 && CheckCollisionPointRec(mousePos, (Rectangle){350, 275, 100, 50}) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                *menuState = 0;
+            for (int i = 0; i < 5; i++) {
+                if (borsa[i].quantita > 0) {
+                    Rectangle itemRect = { borsa[i].x, borsa[i].y, borsa[i].width, borsa[i].height };
+                    if (CheckCollisionPointRec(mousePos, itemRect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                        ActionUseObject(borsa[i].idOggetto, &characterButtons[*sceltaPersonaggio].logic, enemy, battleLog, maxLogLen);
+                        borsa[i].quantita--;
+                        EnemyTurn(enemy, &characterButtons[*sceltaPersonaggio].logic, battleLog, maxLogLen);
+                        *menuState = 0;
+                    }
+                }
             }
+            Rectangle backRect = { 40 + (5 % 3) * 240, 420 + (5 / 3) * 80, 220, 60 };
+            if (CheckCollisionPointRec(mousePos, backRect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) 
+                *menuState = 0;
             break;
-        }
+         }
         case 6: {
             if (CheckCollisionPointRec(mousePos, (Rectangle){350, 250, 100, 40}) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
                 if (ActionEscape(&characterButtons[0].logic, enemy, battleLog, maxLogLen)) {
-                    exit(0); 
+                    *menuState = 7;
+                } else {
+                    *menuState = 0;
                 }
-                *menuState = 0;
             }
             if (CheckCollisionPointRec(mousePos, (Rectangle){350, 310, 100, 40}) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
                 if (ActionSpare(battleLog, maxLogLen)) {
@@ -203,13 +248,22 @@ void DrawMenuUI(int menuState, int sceltaPersonaggio, const Character* enemy, co
             }
             break;
         case 5:
-            if (itemCount == 0) {
-                DrawRectangle(230, 80, 340, 385, BLACK);
-                DrawRectangleLines(230, 80, 340, 385, GOLD);
-                DrawText("Borsa Vuota.", 320, 150, 20, WHITE);
-                DrawRectangle(350, 275, 100, 50, GOLD);
-                DrawText("OK", 385, 290, 20, BLACK);
+            for (int i = 0; i < 5; i++) {
+                if (borsa[i].quantita > 0) {
+                    DrawRectangle(borsa[i].x, borsa[i].y, borsa[i].width, borsa[i].height, LIGHTGRAY);
+                    DrawRectangleLines(borsa[i].x, borsa[i].y, borsa[i].width, borsa[i].height, BLACK);
+                    DrawText(TextFormat("%s (x%d)", borsa[i].name, borsa[i].quantita), borsa[i].x + 15, borsa[i].y + 20, 18, BLACK);
+                } else {
+                    DrawRectangle(borsa[i].x, borsa[i].y, borsa[i].width, borsa[i].height, GRAY);
+                    DrawRectangleLines(borsa[i].x, borsa[i].y, borsa[i].width, borsa[i].height, DARKGRAY);
+                    DrawText("Esaurito", borsa[i].x + 15, borsa[i].y + 20, 18, DARKGRAY);
+                }
             }
+            int backX = 40 + (5 % 3) * 240;
+            int backY = 420 + (5 / 3) * 80;
+            DrawRectangle(backX, backY, 220, 60, RED);
+            DrawRectangleLines(backX, backY, 220, 60, WHITE);
+            DrawText("INDIETRO", backX + 55, backY + 20, 18, WHITE);  
             break;
         case 6:
             DrawRectangle(250, 200, 300, 220, DARKGRAY);

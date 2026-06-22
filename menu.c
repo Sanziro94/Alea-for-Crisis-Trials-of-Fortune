@@ -11,12 +11,12 @@ int main() {
     
     int menuState = 0;
     int sceltaPersonaggio = 0;
-    char battleLog[256] = "Scegli un'azione per iniziare.";
+    char battleLog[512] = "Scegli un'azione per iniziare.";
 
     Character enemy = {
         .name = "Boss Goblin",
-        .maxHealth = 150,
-        .stats = {150, 12, 5, 8}, // HP, ATK, DEF, SPD
+        .maxHealth = 300,
+        .stats = {300, 24, 5, 8}, // HP, ATK, DEF, SPD
         .guarding = false
     };
 

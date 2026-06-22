@@ -22,15 +22,13 @@ struct CharacterUI {
     Character logic; 
 };
 
-struct Item {
+struct ObjectUI {
     char name[20];
     int x, y, width, height;
+    int idOggetto;
+    int quantita;
 };
 
-struct Inventario {
-    struct Item items[10];
-    int itemCount;
-};
 
 extern struct Buttons mainButtons[4];
 extern struct CharacterUI characterButtons[4];

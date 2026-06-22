@@ -9,7 +9,9 @@
 Objects objectTable[] = {
     {"Life_orb", HEAL, 20},
     {"Poison_jar", DAMAGE, 15},
-    {"Speed_boost", BUFF_SPEED, 3}
+    {"Speed_boost", BUFF_SPEED, 3},
+    {"Spinach", BUFF_ATTACK, 5},
+    {"Armor", BUFF_DEFENSE, 5}
 };
 
 int guard_stat = 5; 
