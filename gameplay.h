@@ -2,6 +2,9 @@
 #define GAMEPLAY_H
 
 #include <stdbool.h>
+#include "raylib.h"
+
+#define SEQUENCE_LENGTH 5
 
 // Definizioni condivise
 typedef enum { STAT_HP, STAT_ATK, STAT_DEF, STAT_SPD } StatIndex;
@@ -30,7 +33,7 @@ typedef struct {
     Skill skills[6];            
 } Character;
 
-// Dichiarazioni delle funzioni
+// Dichiarazioni delle funzioni di gioco
 int RollDice(int type);
 int CheckPriority(Character* ally, Character* enemy);
 void ActionAttackPhysical(Character* attacker, Character* target, char* outMessage, int maxMsgLen);
@@ -40,7 +43,18 @@ void ActionGuard(Character* character, char* outMessage, int maxMsgLen);
 bool ActionEscape(Character* ally, Character* enemy, char* outMessage, int maxMsgLen);
 bool ActionSpare(char* outMessage, int maxMsgLen);
 
+// Nuove funzioni per il gameplay dinamico e il Clash
+bool ActionClash(Character* attacker, Character* target, char* outMessage, int maxMsgLen);
+void EnemyTurn(Character* enemy, Character* target, char* outMessage, int maxMsgLen);
+
 extern Objects objectTable[];
 extern int guard_stat;
+
+// Stato del Clash globale condiviso con la UI (Senza duplicati static)
+extern int currentStep;
+extern float timeRemaining;
+extern bool clashInitialized;
+extern int targetSequence[SEQUENCE_LENGTH];
+extern const char* sequenceNames[SEQUENCE_LENGTH];
 
 #endif

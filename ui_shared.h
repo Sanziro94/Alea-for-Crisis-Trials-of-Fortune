@@ -35,7 +35,7 @@ struct Inventario {
 extern struct Buttons mainButtons[4];
 extern struct CharacterUI characterButtons[4];
 
-// Fonctions globales pour simplifier le menu principal
+// Funzioni di gestione della UI e dei Menu
 void InitGameData(void);
 void UpdateMenuLogic(Vector2 mousePos, int* menuState, int* sceltaPersonaggio, Character* enemy, char* battleLog, int maxLogLen);
 void DrawMenuUI(int menuState, int sceltaPersonaggio, const Character* enemy, const char* battleLog);
