@@ -186,7 +186,7 @@ void UpdateMenuLogic(Vector2 mousePos, int* menuState, int* sceltaPersonaggio, C
                     break;
                 }
             }
-            if (CheckCollisionPointRec(mousePos, (Rectangle){350, 250, 100, 40}) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            if (CheckCollisionPointRec(mousePos, (Rectangle){350, 240, 100, 40}) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
                 if (ActionEscape(&characterButtons[leaderIdx].logic, enemy, battleLog, maxLogLen)) {
                     *menuState = 7;
                 } else {
