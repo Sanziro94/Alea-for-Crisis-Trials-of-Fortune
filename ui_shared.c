@@ -53,7 +53,7 @@ void InitGameData(void) {
             borsa[i].quantita = 2; 
         } else {
             borsa[i].quantita = 1;
-        }
+            }
     }
 }
 
@@ -126,11 +126,12 @@ void UpdateMenuLogic(Vector2 mousePos, int* menuState, int* sceltaPersonaggio, C
                     } else {
                         snprintf(battleLog, maxLogLen, "%s è più rapido e intercetta l'azione!", enemy->name);
                         EnemyTurn(enemy, &characterButtons[*sceltaPersonaggio].logic, battleLog, maxLogLen);
-                        
                         char playerLog[128];
-                        ActionSkill(&characterButtons[*sceltaPersonaggio].logic, enemy, &characterButtons[*sceltaPersonaggio].skills[j].logic, playerLog, sizeof(playerLog));
-                        strncat(battleLog, "\n", maxLogLen - strlen(battleLog) - 1);
-                        strncat(battleLog, playerLog, maxLogLen - strlen(battleLog) - 1);
+                        if (characterButtons[*sceltaPersonaggio].logic.stats[STAT_HP] > 0 ) {
+                            ActionSkill(&characterButtons[*sceltaPersonaggio].logic, enemy, &characterButtons[*sceltaPersonaggio].skills[j].logic, playerLog, sizeof(playerLog));
+                            strncat(battleLog, "\n", maxLogLen - strlen(battleLog) - 1);
+                            strncat(battleLog, playerLog, maxLogLen - strlen(battleLog) - 1);
+                        } 
                     }
                     *menuState = 0;   
                 }
@@ -141,9 +142,9 @@ void UpdateMenuLogic(Vector2 mousePos, int* menuState, int* sceltaPersonaggio, C
             for (int i = 0; i < 4; i++) {
                 if (characterButtons[i].logic.stats[STAT_HP] > 0) {
                     if (CheckCollisionPointRec(mousePos, (Rectangle){ characterButtons[i].x, characterButtons[i].y, characterButtons[i].width, characterButtons[i].height }) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                    ActionGuard(&characterButtons[i].logic, battleLog, maxLogLen);
-                    EnemyTurn(enemy, &characterButtons[i].logic, battleLog, maxLogLen);
-                    *menuState = 0;
+                        ActionGuard(&characterButtons[i].logic, battleLog, maxLogLen);
+                        EnemyTurnRandomTarget(enemy, battleLog, maxLogLen);
+                        *menuState = 0;
                     }
                 }
             }
@@ -153,8 +154,8 @@ void UpdateMenuLogic(Vector2 mousePos, int* menuState, int* sceltaPersonaggio, C
             for (int i = 0; i < 4; i++) {
                 if (characterButtons[i].logic.stats[STAT_HP] > 0) {
                     if (CheckCollisionPointRec(mousePos, (Rectangle){ characterButtons[i].x, characterButtons[i].y, characterButtons[i].width, characterButtons[i].height }) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                    *sceltaPersonaggio = i;
-                    *menuState = 5;
+                        *sceltaPersonaggio = i;
+                        *menuState = 5;
                     }
                 }
             }
@@ -167,7 +168,7 @@ void UpdateMenuLogic(Vector2 mousePos, int* menuState, int* sceltaPersonaggio, C
                     if (CheckCollisionPointRec(mousePos, itemRect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
                         ActionUseObject(borsa[i].idOggetto, &characterButtons[*sceltaPersonaggio].logic, enemy, battleLog, maxLogLen);
                         borsa[i].quantita--;
-                        EnemyTurn(enemy, &characterButtons[*sceltaPersonaggio].logic, battleLog, maxLogLen);
+                        EnemyTurnRandomTarget(enemy, battleLog, maxLogLen);
                         *menuState = 0;
                     }
                 }
@@ -178,17 +179,26 @@ void UpdateMenuLogic(Vector2 mousePos, int* menuState, int* sceltaPersonaggio, C
             break;
          }
         case 6: {
+            int leaderIdx = 0;
+            for (int i = 0; i < 4; i++) {
+                if (characterButtons[i].logic.stats[STAT_HP] > 0) {
+                    leaderIdx = i;
+                    break;
+                }
+            }
             if (CheckCollisionPointRec(mousePos, (Rectangle){350, 250, 100, 40}) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                if (ActionEscape(&characterButtons[0].logic, enemy, battleLog, maxLogLen)) {
+                if (ActionEscape(&characterButtons[leaderIdx].logic, enemy, battleLog, maxLogLen)) {
                     *menuState = 7;
                 } else {
+                    EnemyTurnRandomTarget(enemy, battleLog, maxLogLen);
                     *menuState = 0;
-                }
+                    }
             }
             if (CheckCollisionPointRec(mousePos, (Rectangle){350, 310, 100, 40}) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
                 if (ActionSpare(battleLog, maxLogLen)) {
                     *menuState = 7;
                 } else {
+                    EnemyTurnRandomTarget(enemy, battleLog, maxLogLen);
                     *menuState = 0;
                 }
             }

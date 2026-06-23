@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
+#include "ui_shared.h"
 
 Objects objectTable[] = {
     {"Life_orb", HEAL, 20},
@@ -189,6 +190,10 @@ bool ActionClash(Character* attacker, Character* target, char* outMessage, int m
     timeRemaining -= GetFrameTime();
     if (timeRemaining <= 0.0f) {
         snprintf(outMessage, maxMsgLen, "Tempo scaduto! %s vince lo scontro d'impatto!", target->name);
+        int dmg = (target->stats[STAT_ATK] * 2) - attacker->stats[STAT_DEF];
+        if (dmg < 1) dmg = 1;
+        attacker->stats[STAT_HP] -= dmg;
+        if (attacker->stats[STAT_HP] < 0) attacker->stats[STAT_HP] = 0;
         clashInitialized = false;
         return true;
     }
@@ -241,4 +246,18 @@ void EnemyTurn(Character* enemy, Character* target, char* outMessage, int maxMsg
     char tempLog[256];
     strncpy(tempLog, outMessage, sizeof(tempLog));
     snprintf(outMessage, maxMsgLen, "%s\n[TURNO NEMICO]: %s", tempLog, enemyAction);
+}
+//Il Nemico attacca Un Eroe Random
+void EnemyTurnRandomTarget(Character* enemy, char* battleLog, int maxLogLen) {
+    int vivi[4];
+    int conteggioVivi = 0;
+    for (int i = 0; i < 4; i++) {
+        if (characterButtons[i].logic.stats[STAT_HP] > 0) {
+            vivi[conteggioVivi++] = i;
+        }
+    }
+    if (conteggioVivi > 0) {
+        int targetIdx = vivi[rand() % conteggioVivi];
+        EnemyTurn(enemy, &characterButtons[targetIdx].logic, battleLog, maxLogLen);
+    }
 }

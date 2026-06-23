@@ -47,6 +47,8 @@ bool ActionSpare(char* outMessage, int maxMsgLen);
 bool ActionClash(Character* attacker, Character* target, char* outMessage, int maxMsgLen);
 void EnemyTurn(Character* enemy, Character* target, char* outMessage, int maxMsgLen);
 
+void EnemyTurnRandomTarget(Character* enemy, char* battleLog, int maxLogLen);
+
 extern Objects objectTable[];
 extern int guard_stat;
 
