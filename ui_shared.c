@@ -4,10 +4,10 @@
 #include <stdlib.h>
 
 struct Buttons mainButtons[4] = {
-    {"Lotta",   16 + 0*196, 510, 180, 80},
-    {"Guardia", 16 + 1*196, 510, 180, 80},
-    {"Borsa",   16 + 2*196, 510, 180, 80}, 
-    {"Fuga",    16 + 3*196, 510, 180, 80}  
+    {"Fight",  16 + 0*196, 510, 180, 80},
+    {"Guard",  16 + 1*196, 510, 180, 80},
+    {"Bag",    16 + 2*196, 510, 180, 80}, 
+    {"Escape", 16 + 3*196, 510, 180, 80}  
 };
 
 struct CharacterUI characterButtons[4] = {
@@ -17,8 +17,8 @@ struct CharacterUI characterButtons[4] = {
     {"Cyborg",    16 + 3*196, 510, 180, 80, {{"Skill C1"}, {"Skill C2"}, {"Skill C3"}, {"Skill C4"}, {"Skill C5"}, {"Skill C6"}}}
 };
 
-struct ObjectUI borsa[5];
-int tipiOggettiInBorsa = 5;
+struct ObjectUI bag[5];
+int itemTypesInBag = 5;
 
 
 void InitGameData(void) {
@@ -31,7 +31,7 @@ void InitGameData(void) {
     // Cyborg
     characterButtons[3].logic = (Character){"Cyborg", {120, 14, 10, 4}, 120, false};
 
-    // Assegnazione coordinate spaziali dei rettangoli per le Skill
+    // Assign rectangle positions for skills
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 6; j++) {
             characterButtons[i].skills[j].x = 40 + (j % 3) * 240;
@@ -41,43 +41,43 @@ void InitGameData(void) {
             characterButtons[i].skills[j].logic = (Skill){characterButtons[i].skills[j].name, SKILL_NORMAL_DAMAGE, 5 + j, true, STAT_HP};
         }
     }
-    // Assegnazione coordinate spaziali dei rettangoli per gli Oggetti
+    // Assign rectangle positions for items
     for (int i = 0; i < 5; i++) {
-        borsa[i].x = 40 + (i % 3) * 240; 
-        borsa[i].y = 420 + (i / 3) * 80; 
-        borsa[i].width = 220;
-        borsa[i].height = 60;
-        borsa[i].idOggetto = i; 
-        snprintf(borsa[i].name, sizeof(borsa[i].name), "%s", objectTable[i].name);
+        bag[i].x = 40 + (i % 3) * 240; 
+        bag[i].y = 420 + (i / 3) * 80; 
+        bag[i].width = 220;
+        bag[i].height = 60;
+        bag[i].itemId = i; 
+        snprintf(bag[i].name, sizeof(bag[i].name), "%s", objectTable[i].name);
         if (i == 0) {
-            borsa[i].quantita = 2; 
+            bag[i].quantity = 2; 
         } else {
-            borsa[i].quantita = 1;
+            bag[i].quantity = 1;
             }
     }
 }
 
-void UpdateMenuLogic(Vector2 mousePos, int* menuState, int* sceltaPersonaggio, Character* enemy, char* battleLog, int maxLogLen) {
+void UpdateMenuLogic(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen) {
     if (enemy->stats[STAT_HP] <= 0 && *menuState != 7) {
         *menuState = 7;
         return;
     }
-    bool tuttiMorti = true;
+    bool allDead = true;
     for (int i = 0; i < 4; i++) {
         if (characterButtons[i].logic.stats[STAT_HP] > 0 ) {
-            tuttiMorti = false;
+            allDead = false;
             break;
         }   
     }
-    if (tuttiMorti && *menuState != 7)
+    if (allDead && *menuState != 7)
     {
         *menuState = 7;
         return;
     }
-    // Gestione dello stato di Clash isolato (Stato 8)
+    // Isolated Clash state handling (state 8)
     if (*menuState == 8) {
-        bool clashFinito = ActionClash(&characterButtons[*sceltaPersonaggio].logic, enemy, battleLog, maxLogLen);
-        if (clashFinito) {
+        bool clashFinished = ActionClash(&characterButtons[*selectedCharacter].logic, enemy, battleLog, maxLogLen);
+        if (clashFinished) {
             *menuState = 0; 
         }
         return;
@@ -95,7 +95,7 @@ void UpdateMenuLogic(Vector2 mousePos, int* menuState, int* sceltaPersonaggio, C
             for (int i = 0; i < 4; i++) {
                 if (characterButtons[i].logic.stats[STAT_HP] > 0) {
                     if (CheckCollisionPointRec(mousePos, (Rectangle){ characterButtons[i].x, characterButtons[i].y, characterButtons[i].width, characterButtons[i].height }) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                        *sceltaPersonaggio = i;
+                        *selectedCharacter = i;
                         *menuState = 2;
                     }
                 }
@@ -105,30 +105,30 @@ void UpdateMenuLogic(Vector2 mousePos, int* menuState, int* sceltaPersonaggio, C
         case 2: { 
             for (int j = 0; j < 6; j++) {
                 Rectangle r = { 
-                    characterButtons[*sceltaPersonaggio].skills[j].x, 
-                    characterButtons[*sceltaPersonaggio].skills[j].y, 
-                    characterButtons[*sceltaPersonaggio].skills[j].width, 
-                    characterButtons[*sceltaPersonaggio].skills[j].height 
+                    characterButtons[*selectedCharacter].skills[j].x, 
+                    characterButtons[*selectedCharacter].skills[j].y, 
+                    characterButtons[*selectedCharacter].skills[j].width, 
+                    characterButtons[*selectedCharacter].skills[j].height 
                 };
                 
                 if (CheckCollisionPointRec(mousePos, r) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                    // Innesco casuale del Clash (15% di probabilità)
+                    // Random Clash trigger (15% chance)
                     if (rand() % 100 < 15) {
                         *menuState = 8;
                         return;
                     }
 
-                    // Turno Dinamico Reattivo (Iniziativa)
-                    int priority = CheckPriority(&characterButtons[*sceltaPersonaggio].logic, enemy);
+                    // Dynamic reactive turn order (initiative)
+                    int priority = CheckPriority(&characterButtons[*selectedCharacter].logic, enemy);
                     if (priority == 0 || (priority == 2 && rand() % 2 == 0)) {
-                        ActionSkill(&characterButtons[*sceltaPersonaggio].logic, enemy, &characterButtons[*sceltaPersonaggio].skills[j].logic, battleLog, maxLogLen);
-                        EnemyTurn(enemy, &characterButtons[*sceltaPersonaggio].logic, battleLog, maxLogLen);
+                        ActionSkill(&characterButtons[*selectedCharacter].logic, enemy, &characterButtons[*selectedCharacter].skills[j].logic, battleLog, maxLogLen);
+                        EnemyTurn(enemy, &characterButtons[*selectedCharacter].logic, battleLog, maxLogLen);
                     } else {
-                        snprintf(battleLog, maxLogLen, "%s è più rapido e intercetta l'azione!", enemy->name);
-                        EnemyTurn(enemy, &characterButtons[*sceltaPersonaggio].logic, battleLog, maxLogLen);
+                        snprintf(battleLog, maxLogLen, "%s is faster and intercepts the action!", enemy->name);
+                        EnemyTurn(enemy, &characterButtons[*selectedCharacter].logic, battleLog, maxLogLen);
                         char playerLog[128];
-                        if (characterButtons[*sceltaPersonaggio].logic.stats[STAT_HP] > 0 ) {
-                            ActionSkill(&characterButtons[*sceltaPersonaggio].logic, enemy, &characterButtons[*sceltaPersonaggio].skills[j].logic, playerLog, sizeof(playerLog));
+                        if (characterButtons[*selectedCharacter].logic.stats[STAT_HP] > 0 ) {
+                            ActionSkill(&characterButtons[*selectedCharacter].logic, enemy, &characterButtons[*selectedCharacter].skills[j].logic, playerLog, sizeof(playerLog));
                             strncat(battleLog, "\n", maxLogLen - strlen(battleLog) - 1);
                             strncat(battleLog, playerLog, maxLogLen - strlen(battleLog) - 1);
                         } 
@@ -154,7 +154,7 @@ void UpdateMenuLogic(Vector2 mousePos, int* menuState, int* sceltaPersonaggio, C
             for (int i = 0; i < 4; i++) {
                 if (characterButtons[i].logic.stats[STAT_HP] > 0) {
                     if (CheckCollisionPointRec(mousePos, (Rectangle){ characterButtons[i].x, characterButtons[i].y, characterButtons[i].width, characterButtons[i].height }) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                        *sceltaPersonaggio = i;
+                        *selectedCharacter = i;
                         *menuState = 5;
                     }
                 }
@@ -163,11 +163,11 @@ void UpdateMenuLogic(Vector2 mousePos, int* menuState, int* sceltaPersonaggio, C
         }
         case 5: {
             for (int i = 0; i < 5; i++) {
-                if (borsa[i].quantita > 0) {
-                    Rectangle itemRect = { borsa[i].x, borsa[i].y, borsa[i].width, borsa[i].height };
+                if (bag[i].quantity > 0) {
+                    Rectangle itemRect = { bag[i].x, bag[i].y, bag[i].width, bag[i].height };
                     if (CheckCollisionPointRec(mousePos, itemRect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                        ActionUseObject(borsa[i].idOggetto, &characterButtons[*sceltaPersonaggio].logic, enemy, battleLog, maxLogLen);
-                        borsa[i].quantita--;
+                        ActionUseObject(bag[i].itemId, &characterButtons[*selectedCharacter].logic, enemy, battleLog, maxLogLen);
+                        bag[i].quantity--;
                         EnemyTurnRandomTarget(enemy, battleLog, maxLogLen);
                         *menuState = 0;
                     }
@@ -207,17 +207,17 @@ void UpdateMenuLogic(Vector2 mousePos, int* menuState, int* sceltaPersonaggio, C
     }
 }
 
-void DrawMenuUI(int menuState, int sceltaPersonaggio, const Character* enemy, const char* battleLog) {
-    // Info del nemico costanti sullo schermo
+void DrawMenuUI(int menuState, int selectedCharacter, const Character* enemy, const char* battleLog) {
+    // Enemy info, always visible on screen
     DrawText(enemy->name, 50, 50, 22, RED);
     DrawText(TextFormat("HP: %d/%d", enemy->stats[STAT_HP], enemy->maxHealth), 50, 80, 20, LIGHTGRAY);
 
-    // Box del log di battaglia
+    // Battle log box
     DrawRectangle(50, 150, 700, 100, DARKGRAY);
     DrawRectangleLines(50, 150, 700, 100, WHITE);
     DrawText(battleLog, 65, 165, 16, WHITE);
 
-    // Box degli Eroi
+    // Hero info
     for(int i = 0; i < 4; i++) {
         DrawText(TextFormat("%s HP: %d", characterButtons[i].name, characterButtons[i].logic.stats[STAT_HP]), 50 + i*180, 300, 18, GREEN);
     }
@@ -239,10 +239,10 @@ void DrawMenuUI(int menuState, int sceltaPersonaggio, const Character* enemy, co
         case 2:
             DrawRectangle(0, 400, 800, 200, DARKGRAY);
             for (int j = 0; j < 6; j++) {
-                Rectangle r = { characterButtons[sceltaPersonaggio].skills[j].x, characterButtons[sceltaPersonaggio].skills[j].y, characterButtons[sceltaPersonaggio].skills[j].width, characterButtons[sceltaPersonaggio].skills[j].height };
+                Rectangle r = { characterButtons[selectedCharacter].skills[j].x, characterButtons[selectedCharacter].skills[j].y, characterButtons[selectedCharacter].skills[j].width, characterButtons[selectedCharacter].skills[j].height };
                 DrawRectangleRec(r, MAROON);
                 DrawRectangleLines(r.x, r.y, r.width, r.height, WHITE);
-                DrawText(characterButtons[sceltaPersonaggio].skills[j].name, r.x + 15, r.y + 20, 18, WHITE);
+                DrawText(characterButtons[selectedCharacter].skills[j].name, r.x + 15, r.y + 20, 18, WHITE);
             }
             break;
         case 3:
@@ -259,40 +259,40 @@ void DrawMenuUI(int menuState, int sceltaPersonaggio, const Character* enemy, co
             break;
         case 5:
             for (int i = 0; i < 5; i++) {
-                if (borsa[i].quantita > 0) {
-                    DrawRectangle(borsa[i].x, borsa[i].y, borsa[i].width, borsa[i].height, LIGHTGRAY);
-                    DrawRectangleLines(borsa[i].x, borsa[i].y, borsa[i].width, borsa[i].height, BLACK);
-                    DrawText(TextFormat("%s (x%d)", borsa[i].name, borsa[i].quantita), borsa[i].x + 15, borsa[i].y + 20, 18, BLACK);
+                if (bag[i].quantity > 0) {
+                    DrawRectangle(bag[i].x, bag[i].y, bag[i].width, bag[i].height, LIGHTGRAY);
+                    DrawRectangleLines(bag[i].x, bag[i].y, bag[i].width, bag[i].height, BLACK);
+                    DrawText(TextFormat("%s (x%d)", bag[i].name, bag[i].quantity), bag[i].x + 15, bag[i].y + 20, 18, BLACK);
                 } else {
-                    DrawRectangle(borsa[i].x, borsa[i].y, borsa[i].width, borsa[i].height, GRAY);
-                    DrawRectangleLines(borsa[i].x, borsa[i].y, borsa[i].width, borsa[i].height, DARKGRAY);
-                    DrawText("Esaurito", borsa[i].x + 15, borsa[i].y + 20, 18, DARKGRAY);
+                    DrawRectangle(bag[i].x, bag[i].y, bag[i].width, bag[i].height, GRAY);
+                    DrawRectangleLines(bag[i].x, bag[i].y, bag[i].width, bag[i].height, DARKGRAY);
+                    DrawText("Empty", bag[i].x + 15, bag[i].y + 20, 18, DARKGRAY);
                 }
             }
             int backX = 40 + (5 % 3) * 240;
             int backY = 420 + (5 / 3) * 80;
             DrawRectangle(backX, backY, 220, 60, RED);
             DrawRectangleLines(backX, backY, 220, 60, WHITE);
-            DrawText("INDIETRO", backX + 55, backY + 20, 18, WHITE);  
+            DrawText("BACK", backX + 80, backY + 20, 18, WHITE);  
             break;
         case 6:
             DrawRectangle(250, 200, 300, 220, DARKGRAY);
             DrawRectangleLines(250, 200, 300, 220, WHITE);
             
             DrawRectangle(350, 240, 100, 40, LIGHTGRAY);
-            DrawText("Scappa", 365, 250, 18, BLACK);
+            DrawText("Escape", 360, 250, 18, BLACK);
 
             DrawRectangle(350, 310, 100, 40, LIGHTGRAY);
-            DrawText("Risparmia", 355, 320, 18, BLACK);
+            DrawText("Spare", 365, 320, 18, BLACK);
             break;
         case 7:
             DrawRectangle(0, 0, 800, 600, BLACK);
-            DrawText("BATTAGLIA CONCLUSA", 240, 250, 32, GOLD);
+            DrawText("BATTLE ENDED", 270, 250, 32, GOLD);
             break;
-        case 8: // Finestra Grafica del QTE Clash
+        case 8: // Clash QTE window
             DrawRectangle(100, 380, 600, 200, BLACK);
             DrawRectangleLines(100, 380, 600, 200, RED);
-            DrawText("!! IMPATTO DI ATTACCHI !!", 260, 400, 24, ORANGE);
+            DrawText("!! ATTACK CLASH !!", 295, 400, 24, ORANGE);
             
             for (int i = 0; i < SEQUENCE_LENGTH; i++) {
                 Color stepColor = WHITE;
@@ -304,7 +304,7 @@ void DrawMenuUI(int menuState, int sceltaPersonaggio, const Character* enemy, co
                 }
             }
             
-            float maxClashTime = 2.5f + (characterButtons[sceltaPersonaggio].logic.stats[STAT_SPD] * 0.1f);
+            float maxClashTime = 2.5f + (characterButtons[selectedCharacter].logic.stats[STAT_SPD] * 0.1f);
             DrawRectangle(200, 520, (int)(400 * (timeRemaining / maxClashTime)), 15, RED);
             DrawRectangleLines(200, 520, 400, 15, WHITE);
             break;

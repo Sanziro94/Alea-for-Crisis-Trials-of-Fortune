@@ -25,17 +25,17 @@ struct CharacterUI {
 struct ObjectUI {
     char name[20];
     int x, y, width, height;
-    int idOggetto;
-    int quantita;
+    int itemId;
+    int quantity;
 };
 
 
 extern struct Buttons mainButtons[4];
 extern struct CharacterUI characterButtons[4];
 
-// Funzioni di gestione della UI e dei Menu
+// UI and menu management functions
 void InitGameData(void);
-void UpdateMenuLogic(Vector2 mousePos, int* menuState, int* sceltaPersonaggio, Character* enemy, char* battleLog, int maxLogLen);
-void DrawMenuUI(int menuState, int sceltaPersonaggio, const Character* enemy, const char* battleLog);
+void UpdateMenuLogic(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen);
+void DrawMenuUI(int menuState, int selectedCharacter, const Character* enemy, const char* battleLog);
 
 #endif

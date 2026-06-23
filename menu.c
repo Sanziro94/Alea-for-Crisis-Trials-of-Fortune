@@ -10,8 +10,8 @@ int main() {
     SetTargetFPS(60);
     
     int menuState = 0;
-    int sceltaPersonaggio = 0;
-    char battleLog[512] = "Scegli un'azione per iniziare.";
+    int selectedCharacter = 0;
+    char battleLog[512] = "Choose an action to begin.";
 
     Character enemy = {
         .name = "Boss Goblin",
@@ -27,11 +27,11 @@ int main() {
         Vector2 mousePos = GetMousePosition();
         
         
-        UpdateMenuLogic(mousePos, &menuState, &sceltaPersonaggio, &enemy, battleLog, sizeof(battleLog));
+        UpdateMenuLogic(mousePos, &menuState, &selectedCharacter, &enemy, battleLog, sizeof(battleLog));
         
         BeginDrawing();
             ClearBackground(DARKGREEN);
-            DrawMenuUI(menuState, sceltaPersonaggio, &enemy, battleLog);
+            DrawMenuUI(menuState, selectedCharacter, &enemy, battleLog);
         EndDrawing();
     }
     

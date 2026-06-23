@@ -6,7 +6,7 @@
 
 #define SEQUENCE_LENGTH 5
 
-// Definizioni condivise
+// Shared definitions
 typedef enum { STAT_HP, STAT_ATK, STAT_DEF, STAT_SPD } StatIndex;
 typedef enum { HEAL, DAMAGE, BUFF_ATTACK, BUFF_DEFENSE, BUFF_SPEED } ObjectType;
 typedef enum { SKILL_NORMAL_DAMAGE, SKILL_PIERCING, SKILL_VAMPIRISM, SKILL_BUFF } SkillType;
@@ -33,7 +33,7 @@ typedef struct {
     Skill skills[6];            
 } Character;
 
-// Dichiarazioni delle funzioni di gioco
+// Gameplay function declarations
 int RollDice(int type);
 int CheckPriority(Character* ally, Character* enemy);
 void ActionAttackPhysical(Character* attacker, Character* target, char* outMessage, int maxMsgLen);
@@ -43,7 +43,7 @@ void ActionGuard(Character* character, char* outMessage, int maxMsgLen);
 bool ActionEscape(Character* ally, Character* enemy, char* outMessage, int maxMsgLen);
 bool ActionSpare(char* outMessage, int maxMsgLen);
 
-// Nuove funzioni per il gameplay dinamico e il Clash
+// Functions for dynamic gameplay and Clash
 bool ActionClash(Character* attacker, Character* target, char* outMessage, int maxMsgLen);
 void EnemyTurn(Character* enemy, Character* target, char* outMessage, int maxMsgLen);
 
@@ -52,7 +52,7 @@ void EnemyTurnRandomTarget(Character* enemy, char* battleLog, int maxLogLen);
 extern Objects objectTable[];
 extern int guard_stat;
 
-// Stato del Clash globale condiviso con la UI (Senza duplicati static)
+// Global Clash state shared with the UI
 extern int currentStep;
 extern float timeRemaining;
 extern bool clashInitialized;

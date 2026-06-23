@@ -8,9 +8,9 @@
 #include "ui_shared.h"
 
 Objects objectTable[] = {
-    {"Life_orb", HEAL, 20},
-    {"Poison_jar", DAMAGE, 15},
-    {"Speed_boost", BUFF_SPEED, 3},
+    {"Life Orb", HEAL, 20},
+    {"Poison Jar", DAMAGE, 15},
+    {"Speed Boost", BUFF_SPEED, 3},
     {"Spinach", BUFF_ATTACK, 5},
     {"Armor", BUFF_DEFENSE, 5}
 };
@@ -52,7 +52,7 @@ void ActionAttackPhysical(Character* attacker, Character* target, char* outMessa
     target->stats[STAT_HP] -= final_damage;
     if (target->stats[STAT_HP] < 0) target->stats[STAT_HP] = 0;
 
-    snprintf(outMessage, maxMsgLen, "%s attacca %s infliggendo %d danni!", attacker->name, target->name, final_damage);
+    snprintf(outMessage, maxMsgLen, "%s attacks %s, dealing %d damage!", attacker->name, target->name, final_damage);
 }
 
 void ActionSkill(Character* attacker, Character* target, Skill* skill, char* outMessage, int maxMsgLen)
@@ -67,14 +67,14 @@ void ActionSkill(Character* attacker, Character* target, Skill* skill, char* out
             if (target->guarding) { final_damage -= guard_stat; target->guarding = false; }
             if (final_damage <= 0) final_damage = 1;
             target->stats[STAT_HP] -= final_damage;
-            snprintf(outMessage, maxMsgLen, "%s usa %s! Dado: %d. Infligge %d danni!", attacker->name, skill->name, dice, final_damage);
+            snprintf(outMessage, maxMsgLen, "%s uses %s! Dice: %d. Deals %d damage!", attacker->name, skill->name, dice, final_damage);
             break;
 
         case SKILL_PIERCING:
             final_damage = (attacker->stats[STAT_ATK] + skill->value + dice);
             if (final_damage <= 0) final_damage = 1;
             target->stats[STAT_HP] -= final_damage;
-            snprintf(outMessage, maxMsgLen, "%s usa %s (Perforante)! Ignora la difesa e fa %d danni!", attacker->name, skill->name, final_damage);
+            snprintf(outMessage, maxMsgLen, "%s uses %s (Piercing)! Ignores defense and deals %d damage!", attacker->name, skill->name, final_damage);
             break;
 
         case SKILL_VAMPIRISM:
@@ -83,12 +83,12 @@ void ActionSkill(Character* attacker, Character* target, Skill* skill, char* out
             target->stats[STAT_HP] -= final_damage;
             attacker->stats[STAT_HP] += final_damage / 2;
             if (attacker->stats[STAT_HP] > attacker->maxHealth) attacker->stats[STAT_HP] = attacker->maxHealth;
-            snprintf(outMessage, maxMsgLen, "%s usa %s! Fa %d danni e si cura di %d!", attacker->name, skill->name, final_damage, final_damage / 2);
+            snprintf(outMessage, maxMsgLen, "%s uses %s! Deals %d damage and heals for %d HP!", attacker->name, skill->name, final_damage, final_damage / 2);
             break;
 
         case SKILL_BUFF:
             attacker->stats[skill->affected_stat] += skill->value;
-            snprintf(outMessage, maxMsgLen, "%s usa %s! Aumenta la statistica di %d!", attacker->name, skill->name, skill->value);
+            snprintf(outMessage, maxMsgLen, "%s uses %s! Raises a stat by %d!", attacker->name, skill->name, skill->value);
             break;
     }
     if (target->stats[STAT_HP] < 0) target->stats[STAT_HP] = 0;
@@ -102,24 +102,24 @@ void ActionUseObject(int itemIndex, Character* attacker, Character* target, char
         case HEAL:
             attacker->stats[STAT_HP] += obj.value;
             if (attacker->stats[STAT_HP] > attacker->maxHealth) attacker->stats[STAT_HP] = attacker->maxHealth;
-            snprintf(outMessage, maxMsgLen, "%s usa %s e recupera %d HP!", attacker->name, obj.name, obj.value);
+            snprintf(outMessage, maxMsgLen, "%s uses %s and recovers %d HP!", attacker->name, obj.name, obj.value);
             break;
         case DAMAGE:
             target->stats[STAT_HP] -= obj.value;
             if (target->stats[STAT_HP] < 0) target->stats[STAT_HP] = 0;
-            snprintf(outMessage, maxMsgLen, "%s lancia %s e infligge %d danni a %s!", attacker->name, obj.name, obj.value, target->name);
+            snprintf(outMessage, maxMsgLen, "%s throws %s and deals %d damage to %s!", attacker->name, obj.name, obj.value, target->name);
             break;
         case BUFF_ATTACK:
             attacker->stats[STAT_ATK] += obj.value;
-            snprintf(outMessage, maxMsgLen, "%s usa %s! Attacco aumentato!", attacker->name, obj.name);
+            snprintf(outMessage, maxMsgLen, "%s uses %s! Attack increased!", attacker->name, obj.name);
             break;
         case BUFF_DEFENSE:
             attacker->stats[STAT_DEF] += obj.value;
-            snprintf(outMessage, maxMsgLen, "%s usa %s! Difesa aumentata!", attacker->name, obj.name);
+            snprintf(outMessage, maxMsgLen, "%s uses %s! Defense increased!", attacker->name, obj.name);
             break;
         case BUFF_SPEED:
             attacker->stats[STAT_SPD] += obj.value;
-            snprintf(outMessage, maxMsgLen, "%s usa %s! Velocità aumentata!", attacker->name, obj.name);
+            snprintf(outMessage, maxMsgLen, "%s uses %s! Speed increased!", attacker->name, obj.name);
             break;
     }
 }
@@ -127,20 +127,20 @@ void ActionUseObject(int itemIndex, Character* attacker, Character* target, char
 void ActionGuard(Character* character, char* outMessage, int maxMsgLen)
 {
     character->guarding = true;
-    snprintf(outMessage, maxMsgLen, "%s si mette in posizione di guardia!", character->name);
+    snprintf(outMessage, maxMsgLen, "%s takes a defensive stance!", character->name);
 }
 
 bool ActionEscape(Character* ally, Character* enemy, char* outMessage, int maxMsgLen)
 {
     int escape_chance = RollDice(3); 
     if (ally->stats[STAT_SPD] >= enemy->stats[STAT_SPD] && escape_chance > 30) {
-        snprintf(outMessage, maxMsgLen, "Fuga riuscita con successo!");
+        snprintf(outMessage, maxMsgLen, "Escape successful!");
         return true;
     } else if (escape_chance > 70) {
-        snprintf(outMessage, maxMsgLen, "Fuga rocambolesca riuscita!");
+        snprintf(outMessage, maxMsgLen, "A desperate escape succeeds!");
         return true;
     }
-    snprintf(outMessage, maxMsgLen, "Fuga fallita! Il nemico ti blocca la strada!");
+    snprintf(outMessage, maxMsgLen, "Escape failed! The enemy blocks your path!");
     return false;
 }
 
@@ -148,24 +148,24 @@ bool ActionSpare(char* outMessage, int maxMsgLen)
 {
     int dice = RollDice(0);
     if (dice >= 5) {
-        snprintf(outMessage, maxMsgLen, "Il nemico ha accettato la grazia! Vittoria!");
+        snprintf(outMessage, maxMsgLen, "The enemy accepts your mercy! Victory!");
         return true;
     }
-    snprintf(outMessage, maxMsgLen, "Il nemico rifiuta la pietà!");
+    snprintf(outMessage, maxMsgLen, "The enemy rejects your mercy!");
     return false;
 }
 
-// Definizione delle variabili globali del Clash
+// Global Clash variables
 int currentStep = 0;
 float timeRemaining = 3.0f;
 bool clashInitialized = false;
 int targetSequence[SEQUENCE_LENGTH] = { 0 };
 const char* sequenceNames[SEQUENCE_LENGTH] = { NULL };
 
-// Generatore casuale della sequenza di tasti per il QTE
+// Random key sequence generator for the QTE
 void GenerateClashSequence(void) {
     int keys[4] = { KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT };
-    const char* names[4] = { "SU", "GIU", "SX", "DX" };
+    const char* names[4] = { "UP", "DOWN", "LEFT", "RIGHT" };
 
     for (int i = 0; i < SEQUENCE_LENGTH - 1; i++) {
         int r = rand() % 4;
@@ -173,7 +173,7 @@ void GenerateClashSequence(void) {
         sequenceNames[i] = names[r];
     }
     targetSequence[SEQUENCE_LENGTH - 1] = KEY_SPACE;
-    sequenceNames[SEQUENCE_LENGTH - 1] = "SPAZIO";
+    sequenceNames[SEQUENCE_LENGTH - 1] = "SPACE";
 }
 
 bool ActionClash(Character* attacker, Character* target, char* outMessage, int maxMsgLen)
@@ -183,13 +183,13 @@ bool ActionClash(Character* attacker, Character* target, char* outMessage, int m
         timeRemaining = 2.5f + (attacker->stats[STAT_SPD] * 0.1f); 
         GenerateClashSequence();
         clashInitialized = true;
-        snprintf(outMessage, maxMsgLen, "CLASH! Premi la sequenza di tasti rapidamente!");
+        snprintf(outMessage, maxMsgLen, "CLASH! Press the key sequence quickly!");
         return false; 
     }
 
     timeRemaining -= GetFrameTime();
     if (timeRemaining <= 0.0f) {
-        snprintf(outMessage, maxMsgLen, "Tempo scaduto! %s vince lo scontro d'impatto!", target->name);
+        snprintf(outMessage, maxMsgLen, "Time is up! %s wins the clash!", target->name);
         int dmg = (target->stats[STAT_ATK] * 2) - attacker->stats[STAT_DEF];
         if (dmg < 1) dmg = 1;
         attacker->stats[STAT_HP] -= dmg;
@@ -203,7 +203,7 @@ bool ActionClash(Character* attacker, Character* target, char* outMessage, int m
     if (IsKeyPressed(expectedKey)) {
         currentStep++;
         if (currentStep >= SEQUENCE_LENGTH) {
-            snprintf(outMessage, maxMsgLen, "%s vince il clash con un colpo devastante!", attacker->name);
+            snprintf(outMessage, maxMsgLen, "%s wins the clash with a devastating blow!", attacker->name);
             int dmg = (attacker->stats[STAT_ATK] * 2) - target->stats[STAT_DEF];
             if (dmg < 1) dmg = 1;
             target->stats[STAT_HP] -= dmg;
@@ -222,7 +222,7 @@ bool ActionClash(Character* attacker, Character* target, char* outMessage, int m
     return false; 
 }
 
-// Logica dell'Intelligenza Artificiale del Nemico
+// Enemy AI logic
 void EnemyTurn(Character* enemy, Character* target, char* outMessage, int maxMsgLen) {
     if (enemy->stats[STAT_HP] <= 0) return;
 
@@ -237,7 +237,7 @@ void EnemyTurn(Character* enemy, Character* target, char* outMessage, int maxMsg
         if (dmg < 1) dmg = 1;
         target->stats[STAT_HP] -= dmg;
         if (target->stats[STAT_HP] < 0) target->stats[STAT_HP] = 0;
-        snprintf(enemyAction, sizeof(enemyAction), "%s scatena un attacco pesante devastante!", enemy->name);
+        snprintf(enemyAction, sizeof(enemyAction), "%s unleashes a devastating heavy attack!", enemy->name);
     } 
     else {
         ActionAttackPhysical(enemy, target, enemyAction, sizeof(enemyAction));
@@ -245,19 +245,19 @@ void EnemyTurn(Character* enemy, Character* target, char* outMessage, int maxMsg
 
     char tempLog[256];
     strncpy(tempLog, outMessage, sizeof(tempLog));
-    snprintf(outMessage, maxMsgLen, "%s\n[TURNO NEMICO]: %s", tempLog, enemyAction);
+    snprintf(outMessage, maxMsgLen, "%s\n[ENEMY TURN]: %s", tempLog, enemyAction);
 }
-//Il Nemico attacca Un Eroe Random
+// The enemy attacks a random living hero
 void EnemyTurnRandomTarget(Character* enemy, char* battleLog, int maxLogLen) {
-    int vivi[4];
-    int conteggioVivi = 0;
+    int aliveHeroes[4];
+    int aliveCount = 0;
     for (int i = 0; i < 4; i++) {
         if (characterButtons[i].logic.stats[STAT_HP] > 0) {
-            vivi[conteggioVivi++] = i;
+            aliveHeroes[aliveCount++] = i;
         }
     }
-    if (conteggioVivi > 0) {
-        int targetIdx = vivi[rand() % conteggioVivi];
+    if (aliveCount > 0) {
+        int targetIdx = aliveHeroes[rand() % aliveCount];
         EnemyTurn(enemy, &characterButtons[targetIdx].logic, battleLog, maxLogLen);
     }
 }
