@@ -10,12 +10,17 @@
 Objects objectTable[] = {
     {"Life Orb", HEAL, 20},
     {"Poison Jar", DAMAGE, 15},
-    {"Speed Boost", BUFF_SPEED, 3},
     {"Spinach", BUFF_ATTACK, 5},
-    {"Armor", BUFF_DEFENSE, 5}
+    {"Armor", BUFF_DEFENSE, 5},
+    {"Speed Boost", BUFF_SPEED, 3}
 };
 
-int guard_stat = 5; 
+int guard_stat = 5;
+int turn = 0; 
+int poisonTurn = 0;
+int poisonDamage = 0;
+Character* poisonTarget = NULL;
+bool isPoisoned = false;
 
 int RollDice(int type)
 {
@@ -35,7 +40,6 @@ int CheckPriority(Character* ally, Character* enemy)
     if (ally->stats[STAT_SPD] < enemy->stats[STAT_SPD]) return 1; 
     return 2;                               
 }
-
 void ActionAttackPhysical(Character* attacker, Character* target, char* outMessage, int maxMsgLen)
 {
     int base_damage = attacker->stats[STAT_ATK];
@@ -105,10 +109,10 @@ void ActionUseObject(int itemIndex, Character* attacker, Character* target, char
             snprintf(outMessage, maxMsgLen, "%s uses %s and recovers %d HP!", attacker->name, obj.name, obj.value);
             break;
         case DAMAGE:
-            target->stats[STAT_HP] -= obj.value;
-            if (target->stats[STAT_HP] < 0) target->stats[STAT_HP] = 0;
-            snprintf(outMessage, maxMsgLen, "%s throws %s and deals %d damage to %s!", attacker->name, obj.name, obj.value, target->name);
-            break;
+            poisonTurn = 3;
+            poisonDamage = obj.value;
+            isPoisoned = true;
+            snprintf(outMessage, maxMsgLen, "%s throws %s and poison %s for %d turns!", attacker->name, obj.name, target->name, poisonTurn);
         case BUFF_ATTACK:
             attacker->stats[STAT_ATK] += obj.value;
             snprintf(outMessage, maxMsgLen, "%s uses %s! Attack increased!", attacker->name, obj.name);
@@ -229,9 +233,9 @@ void EnemyTurn(Character* enemy, Character* target, char* outMessage, int maxMsg
     int decision = rand() % 100;
     char enemyAction[128] = "";
 
-    if (enemy->stats[STAT_HP] < (enemy->maxHealth * 0.35f) && decision < 50) {
+    if (enemy->stats[STAT_HP] < (enemy->maxHealth * 0.35f) && decision < 50) 
         ActionGuard(enemy, enemyAction, sizeof(enemyAction));
-    } 
+    
     else if (decision > 75) {
         int dmg = (enemy->stats[STAT_ATK] * 1.5f) - target->stats[STAT_DEF];
         if (dmg < 1) dmg = 1;
@@ -239,22 +243,34 @@ void EnemyTurn(Character* enemy, Character* target, char* outMessage, int maxMsg
         if (target->stats[STAT_HP] < 0) target->stats[STAT_HP] = 0;
         snprintf(enemyAction, sizeof(enemyAction), "%s unleashes a devastating heavy attack!", enemy->name);
     } 
-    else {
+    else 
         ActionAttackPhysical(enemy, target, enemyAction, sizeof(enemyAction));
-    }
-
+    
     char tempLog[256];
     strncpy(tempLog, outMessage, sizeof(tempLog));
     snprintf(outMessage, maxMsgLen, "%s\n[ENEMY TURN]: %s", tempLog, enemyAction);
+    //Turns Management
+    turn++;
+    //Poison code
+    if (isPoisoned == true) {
+        poisonTarget = enemy;
+        if (poisonTurn > 0) {
+            poisonTarget->stats[STAT_HP] -= poisonDamage;
+            if (poisonTarget->stats[STAT_HP] < 0) poisonTarget->stats[STAT_HP] = 0;
+            poisonTurn--;
+        } else if (poisonTurn == 0) {
+            isPoisoned = false;
+            poisonTarget = NULL;
+        }
+    } 
 }
 // The enemy attacks a random living hero
 void EnemyTurnRandomTarget(Character* enemy, char* battleLog, int maxLogLen) {
     int aliveHeroes[4];
     int aliveCount = 0;
     for (int i = 0; i < 4; i++) {
-        if (characterButtons[i].logic.stats[STAT_HP] > 0) {
+        if (characterButtons[i].logic.stats[STAT_HP] > 0) 
             aliveHeroes[aliveCount++] = i;
-        }
     }
     if (aliveCount > 0) {
         int targetIdx = aliveHeroes[rand() % aliveCount];
