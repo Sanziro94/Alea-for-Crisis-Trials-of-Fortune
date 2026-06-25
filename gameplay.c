@@ -19,7 +19,6 @@ int guard_stat = 5;
 int turn = 0; 
 int poisonTurn = 0;
 int poisonDamage = 0;
-Character* poisonTarget = NULL;
 bool isPoisoned = false;
 
 int RollDice(int type)
@@ -113,6 +112,7 @@ void ActionUseObject(int itemIndex, Character* attacker, Character* target, char
             poisonDamage = obj.value;
             isPoisoned = true;
             snprintf(outMessage, maxMsgLen, "%s throws %s and poison %s for %d turns!", attacker->name, obj.name, target->name, poisonTurn);
+            break;
         case BUFF_ATTACK:
             attacker->stats[STAT_ATK] += obj.value;
             snprintf(outMessage, maxMsgLen, "%s uses %s! Attack increased!", attacker->name, obj.name);
@@ -252,17 +252,12 @@ void EnemyTurn(Character* enemy, Character* target, char* outMessage, int maxMsg
     //Turns Management
     turn++;
     //Poison code
-    if (isPoisoned == true) {
-        poisonTarget = enemy;
-        if (poisonTurn > 0) {
-            poisonTarget->stats[STAT_HP] -= poisonDamage;
-            if (poisonTarget->stats[STAT_HP] < 0) poisonTarget->stats[STAT_HP] = 0;
-            poisonTurn--;
-        } else if (poisonTurn == 0) {
-            isPoisoned = false;
-            poisonTarget = NULL;
-        }
-    } 
+    if (isPoisoned && poisonTurn > 0) {
+        enemy->stats[STAT_HP] -= poisonDamage;
+        if (enemy->stats[STAT_HP] < 0) enemy->stats[STAT_HP] = 0;
+        poisonTurn--;
+        if (poisonTurn == 0) isPoisoned = false;
+    }
 }
 // The enemy attacks a random living hero
 void EnemyTurnRandomTarget(Character* enemy, char* battleLog, int maxLogLen) {
