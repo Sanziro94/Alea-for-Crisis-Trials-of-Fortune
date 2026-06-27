@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
-#include "ui_shared.h"
+#include "ui.h"
 
 Objects objectTable[] = {
     {"Life Orb", HEAL, 20},
@@ -16,10 +16,10 @@ Objects objectTable[] = {
 };
 
 int guard_stat = 5;
-int turn = 0; 
 int poisonTurn = 0;
 int poisonDamage = 0;
 bool isPoisoned = false;
+
 
 int RollDice(int type)
 {
@@ -74,7 +74,7 @@ void ActionSkill(Character* attacker, Character* target, Skill* skill, char* out
             break;
 
         case SKILL_PIERCING:
-            final_damage = (attacker->stats[STAT_ATK] + skill->value + dice);
+	        final_damage = (attacker->stats[STAT_ATK] + skill->value + dice);
             if (final_damage <= 0) final_damage = 1;
             target->stats[STAT_HP] -= final_damage;
             snprintf(outMessage, maxMsgLen, "%s uses %s (Piercing)! Ignores defense and deals %d damage!", attacker->name, skill->name, final_damage);
@@ -91,7 +91,8 @@ void ActionSkill(Character* attacker, Character* target, Skill* skill, char* out
 
         case SKILL_BUFF:
             attacker->stats[skill->affected_stat] += skill->value;
-            snprintf(outMessage, maxMsgLen, "%s uses %s! Raises a stat by %d!", attacker->name, skill->name, skill->value);
+            const char* statNames[] = {"HP", "Attack", "Defense", "Speed"};
+            snprintf(outMessage, maxMsgLen, "%s uses %s! Raises %s by %d!", attacker->name, skill->name, statNames[skill->affected_stat], skill->value);
             break;
     }
     if (target->stats[STAT_HP] < 0) target->stats[STAT_HP] = 0;
@@ -247,17 +248,8 @@ void EnemyTurn(Character* enemy, Character* target, char* outMessage, int maxMsg
         ActionAttackPhysical(enemy, target, enemyAction, sizeof(enemyAction));
     
     char tempLog[256];
-    strncpy(tempLog, outMessage, sizeof(tempLog));
+    snprintf(tempLog, sizeof(tempLog), "%s", outMessage);
     snprintf(outMessage, maxMsgLen, "%s\n[ENEMY TURN]: %s", tempLog, enemyAction);
-    //Turns Management
-    turn++;
-    //Poison code
-    if (isPoisoned && poisonTurn > 0) {
-        enemy->stats[STAT_HP] -= poisonDamage;
-        if (enemy->stats[STAT_HP] < 0) enemy->stats[STAT_HP] = 0;
-        poisonTurn--;
-        if (poisonTurn == 0) isPoisoned = false;
-    }
 }
 // The enemy attacks a random living hero
 void EnemyTurnRandomTarget(Character* enemy, char* battleLog, int maxLogLen) {

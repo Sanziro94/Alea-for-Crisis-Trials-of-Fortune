@@ -1,6 +1,6 @@
 #include "raylib.h"
 #include "gameplay.h"
-#include "ui_shared.h"
+#include "ui.h"
 #include <stdlib.h>
 #include <time.h>
 

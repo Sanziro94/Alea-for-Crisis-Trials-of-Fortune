@@ -22,7 +22,8 @@ typedef struct {
     SkillType type;
     int value; 
     bool harm;                  
-    StatIndex affected_stat;    
+    StatIndex affected_stat;
+    int cooldown;
 } Skill;
 
 typedef struct {
@@ -51,6 +52,10 @@ void EnemyTurnRandomTarget(Character* enemy, char* battleLog, int maxLogLen);
 
 extern Objects objectTable[];
 extern int guard_stat;
+extern int poisonTurn;
+extern int poisonDamage;
+extern bool isPoisoned;
+
 
 // Global Clash state shared with the UI
 extern int currentStep;
