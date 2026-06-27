@@ -138,13 +138,8 @@ void ActionGuard(Character* character, char* outMessage, int maxMsgLen)
 bool ActionEscape(Character* ally, Character* enemy, char* outMessage, int maxMsgLen)
 {
     int escape_chance = RollDice(3); 
-    if (ally->stats[STAT_SPD] >= enemy->stats[STAT_SPD] && escape_chance > 30) {
-        snprintf(outMessage, maxMsgLen, "Escape successful!");
-        return true;
-    } else if (escape_chance > 70) {
-        snprintf(outMessage, maxMsgLen, "A desperate escape succeeds!");
-        return true;
-    }
+    if (ally->stats[STAT_SPD] >= enemy->stats[STAT_SPD] && escape_chance > 30) return true;
+        else if (escape_chance > 70) return true;
     snprintf(outMessage, maxMsgLen, "Escape failed! The enemy blocks your path!");
     return false;
 }
@@ -152,10 +147,7 @@ bool ActionEscape(Character* ally, Character* enemy, char* outMessage, int maxMs
 bool ActionSpare(char* outMessage, int maxMsgLen)
 {
     int dice = RollDice(0);
-    if (dice >= 5) {
-        snprintf(outMessage, maxMsgLen, "The enemy accepts your mercy! Victory!");
-        return true;
-    }
+    if (dice >= 5) return true;
     snprintf(outMessage, maxMsgLen, "The enemy rejects your mercy!");
     return false;
 }

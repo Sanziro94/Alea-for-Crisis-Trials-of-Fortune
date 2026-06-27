@@ -20,7 +20,6 @@ int main() {
         .guarding = false
     };
 
-
     InitGameData();
 
     while (!WindowShouldClose()) {
@@ -34,7 +33,6 @@ int main() {
             DrawMenuUI(menuState, selectedCharacter, &enemy, battleLog);
         EndDrawing();
     }
-    
     CloseWindow();
     return 0;
 }

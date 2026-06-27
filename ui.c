@@ -41,16 +41,16 @@ void InitGameData(void) {
             characterButtons[i].skills[j].rect.height = 60;
             switch (j) {
                 case 3:
-                    characterButtons[i].skills[j].logic = (Skill){characterButtons[i].skills[j].name, SKILL_PIERCING, 5 + j, true, STAT_HP, 0};
+                    characterButtons[i].skills[j].logic = (Skill){characterButtons[i].skills[j].name, SKILL_PIERCING, 5 , true, STAT_HP, 0};
                     break;
                 case 4:
-                    characterButtons[i].skills[j].logic = (Skill){characterButtons[i].skills[j].name, SKILL_VAMPIRISM, 5 + j, true, STAT_HP, 0};
+                    characterButtons[i].skills[j].logic = (Skill){characterButtons[i].skills[j].name, SKILL_VAMPIRISM, 5 , true, STAT_HP, 0};
                     break;
                 case 5:
-                    if (i == 0) characterButtons[i].skills[j].logic = (Skill){characterButtons[i].skills[j].name, SKILL_BUFF, 5 + j, false, STAT_ATK, 0};
-                    if (i == 1) characterButtons[i].skills[j].logic = (Skill){characterButtons[i].skills[j].name, SKILL_BUFF, 5 + j, false, STAT_HP, 0};
-                    if (i == 2) characterButtons[i].skills[j].logic = (Skill){characterButtons[i].skills[j].name, SKILL_BUFF, 5 + j, false, STAT_SPD, 0};
-                    if (i == 3) characterButtons[i].skills[j].logic = (Skill){characterButtons[i].skills[j].name, SKILL_BUFF, 5 + j, false, STAT_DEF, 0};
+                    if (i == 0) characterButtons[i].skills[j].logic = (Skill){characterButtons[i].skills[j].name, SKILL_BUFF, 5 , false, STAT_ATK, 0};
+                    if (i == 1) characterButtons[i].skills[j].logic = (Skill){characterButtons[i].skills[j].name, SKILL_BUFF, 5 , false, STAT_HP, 0};
+                    if (i == 2) characterButtons[i].skills[j].logic = (Skill){characterButtons[i].skills[j].name, SKILL_BUFF, 2 , false, STAT_SPD, 0};
+                    if (i == 3) characterButtons[i].skills[j].logic = (Skill){characterButtons[i].skills[j].name, SKILL_BUFF, 1 , false, STAT_DEF, 0};
                     break;
                 default:
                     characterButtons[i].skills[j].logic = (Skill){characterButtons[i].skills[j].name, SKILL_NORMAL_DAMAGE, 5 + j, true, STAT_HP, 0};
