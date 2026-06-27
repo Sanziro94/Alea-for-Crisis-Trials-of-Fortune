@@ -382,6 +382,12 @@ void DrawMenuUI(int menuState, int selectedCharacter, const Character* enemy, co
             }
             break;
         case ROUND_END_STATE:
+            DrawRectangle(0, 500, 800, 100, DARKGRAY);
+            for (int i = 0; i < 4; i++) {
+                DrawRectangleRec(mainButtons[i].rect, LIGHTGRAY);
+                DrawRectangleLinesEx(mainButtons[i].rect, 1, BLACK);
+                DrawText(mainButtons[i].name, mainButtons[i].rect.x + 40, mainButtons[i].rect.y + 30, 20, BLACK);
+            }
             if (menuState == 7) {
                 DrawRectangle(0, 0, 800, 600, BLACK);
                 DrawText("ESCAPED!", 270, 250, 32, SKYBLUE);
