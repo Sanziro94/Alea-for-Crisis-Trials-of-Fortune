@@ -5,6 +5,20 @@
 #include "gameplay.h"
 
 typedef enum { PLAYER_TURN_STATE, ENEMY_TURN_STATE, ROUND_END_STATE} States;
+typedef enum {
+    MENU_MAIN = 0,
+    MENU_SELECT_CHAR_ATTACK,
+    MENU_SELECT_SKILL,
+    MENU_SELECT_CHAR_GUARD,
+    MENU_SELECT_CHAR_BAG,
+    MENU_BAG_ITEMS,
+    MENU_ESCAPE_SPARE,
+    MENU_ESCAPED,
+    MENU_CLASH,
+    MENU_MERCY,
+    MENU_VICTORY,
+    MENU_DEFEAT
+} MenuState;
 
 struct Buttons {
     char name[20];

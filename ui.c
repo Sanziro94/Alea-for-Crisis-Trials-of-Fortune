@@ -17,10 +17,13 @@ struct CharacterUI characterButtons[4] = {
     {"Cyborg",    {16 + 3*196, 510, 180, 80}, {{"Normal Skill C1"}, {"Normal Skill C2"}, {"Normal Skill C3"}, {"Piercing Skill C4"}, {"Vampirism Skill C5"}, {"Buff Skill C6"}}}
 };
 
-struct ObjectUI bag[5];
-int itemTypesInBag = 5;
-States gameState;
-int turn;
+static struct ObjectUI bag[5];
+static int itemTypesInBag = 5;
+static States gameState;
+static int turn;
+static bool enemyTargetRandom = false;
+static bool fugaRiuscita = false;
+static bool graziaRicevuta = false;
 
 void InitGameData(void) {
     // Mercenary
@@ -68,196 +71,208 @@ void InitGameData(void) {
         snprintf(bag[i].name, sizeof(bag[i].name), "%s", objectTable[i].name);
         if (i == 0) bag[i].quantity = 2; 
         else bag[i].quantity = 1;
-            
     }
 }
+static void PlayerTurnLogic (Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen) {
+    switch (*menuState) {
+        case MENU_MAIN:
+            if (CheckCollisionPointRec(mousePos, mainButtons[0].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) *menuState = MENU_SELECT_CHAR_ATTACK;
+            if (CheckCollisionPointRec(mousePos, mainButtons[1].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) *menuState = MENU_SELECT_CHAR_GUARD;
+            if (CheckCollisionPointRec(mousePos, mainButtons[2].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) *menuState = MENU_SELECT_CHAR_BAG;
+            if (CheckCollisionPointRec(mousePos, mainButtons[3].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) *menuState = MENU_ESCAPE_SPARE;
+            break;
+        case MENU_SELECT_CHAR_ATTACK:
+            for (int i = 0; i < 4; i++) {
+                if (characterButtons[i].logic.stats[STAT_HP] > 0) {
+                    if (CheckCollisionPointRec(mousePos, characterButtons[i].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                    *selectedCharacter = i;
+                    *menuState = MENU_SELECT_SKILL;
+                    }
+                }
+            }
+            break;
+        case MENU_SELECT_SKILL:
+            for (int j = 0; j < 6; j++)  {  
+                if (characterButtons[*selectedCharacter].skills[j].logic.cooldown == 0) {
+                    if (CheckCollisionPointRec(mousePos, characterButtons[*selectedCharacter].skills[j].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
 
+                        if (j > 2) characterButtons[*selectedCharacter].skills[j].logic.cooldown = 4; 
+
+                        if (characterButtons[*selectedCharacter].skills[j].logic.harm == true) {
+                            if (rand() % 100 < 15 && j < 3 ) {
+                                *menuState = MENU_CLASH;
+                                return;
+                            }
+                            int priority = CheckPriority(&characterButtons[*selectedCharacter].logic, enemy);
+                            if (priority == 1 || (priority == 2 && rand() % 2 == 0)) {
+                                snprintf(battleLog, maxLogLen, "[INTERCEPT] %s is faster and moves first!", enemy->name);
+                                EnemyTurn(enemy, &characterButtons[*selectedCharacter].logic, battleLog, maxLogLen);
+                                if (characterButtons[*selectedCharacter].logic.stats[STAT_HP] > 0) {
+                                    char playerLog[256];
+                                    ActionSkill(&characterButtons[*selectedCharacter].logic, enemy, &characterButtons[*selectedCharacter].skills[j].logic, playerLog, sizeof(playerLog));
+                                    strncat(battleLog, "\n", maxLogLen - strlen(battleLog) - 1);
+                                    strncat(battleLog, playerLog, maxLogLen - strlen(battleLog) - 1);
+                                } else {
+                                    strncat(battleLog, "\n...but the hero was knocked out before acting!", maxLogLen - strlen(battleLog) - 1);
+                                }
+                                gameState = ROUND_END_STATE;
+                            } 
+                            else {
+                                ActionSkill(&characterButtons[*selectedCharacter].logic, enemy, &characterButtons[*selectedCharacter].skills[j].logic, battleLog, maxLogLen);
+                                enemyTargetRandom = true; 
+                                gameState = ENEMY_TURN_STATE;
+                            }
+                        } 
+                        else {
+                            ActionSkill(&characterButtons[*selectedCharacter].logic, enemy, &characterButtons[*selectedCharacter].skills[j].logic, battleLog, maxLogLen);
+                            enemyTargetRandom = true; 
+                            gameState = ENEMY_TURN_STATE;
+                        }
+                        *menuState = MENU_MAIN; 
+                        break;          
+                    }
+                }
+            } 
+            break;
+        case MENU_SELECT_CHAR_GUARD:
+            for (int i = 0; i < 4; i++) {
+                if (characterButtons[i].logic.stats[STAT_HP] > 0) {
+                    if (CheckCollisionPointRec(mousePos, characterButtons[i].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                        ActionGuard(&characterButtons[i].logic, battleLog, maxLogLen);
+                        enemyTargetRandom = true; 
+                        gameState = ENEMY_TURN_STATE;
+                        *menuState = MENU_MAIN;
+                    }
+                }
+            }
+            break;
+        case MENU_SELECT_CHAR_BAG: 
+            for (int i = 0; i < 4; i++) {
+                if (characterButtons[i].logic.stats[STAT_HP] > 0) {
+                    if (CheckCollisionPointRec(mousePos, characterButtons[i].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                        *selectedCharacter = i;
+                        *menuState = MENU_BAG_ITEMS;
+                    }
+                }
+            }
+            break;
+        case MENU_BAG_ITEMS:
+            for (int i = 0; i < 5; i++) {
+                if (bag[i].quantity > 0) {
+                    if (CheckCollisionPointRec(mousePos, bag[i].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                        ActionUseObject(bag[i].itemId, &characterButtons[*selectedCharacter].logic, enemy, battleLog, maxLogLen);
+                        bag[i].quantity--;
+                        enemyTargetRandom = true;
+                        gameState = ENEMY_TURN_STATE;
+                        *menuState = MENU_MAIN;
+                    }
+                }
+            }
+            Rectangle backRect = { 40 + (5 % 3) * 240, 420 + (5 / 3) * 80, 220, 60 };
+            if (CheckCollisionPointRec(mousePos, backRect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) 
+                *menuState = MENU_MAIN;       
+            break;
+        case MENU_ESCAPE_SPARE:      
+            int leaderIdx = 0;
+            for (int i = 0; i < 4; i++) {
+                if (characterButtons[i].logic.stats[STAT_HP] > 0) {
+                    leaderIdx = i;
+                    break;
+                }
+            }
+            if (CheckCollisionPointRec(mousePos, (Rectangle){350, 240, 100, 40}) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                if (ActionEscape(&characterButtons[leaderIdx].logic, enemy, battleLog, maxLogLen)) {
+                    fugaRiuscita = true;
+                    gameState = ROUND_END_STATE;
+                } else {
+                    enemyTargetRandom = true;
+                    gameState = ENEMY_TURN_STATE;
+                    *menuState = MENU_MAIN;
+                    }
+            }
+            if (CheckCollisionPointRec(mousePos, (Rectangle){350, 310, 100, 40}) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                if (ActionSpare(battleLog, maxLogLen)) {
+                    graziaRicevuta = true;
+                    gameState = ROUND_END_STATE;
+                } else {
+                    enemyTargetRandom = true;
+                    gameState = ENEMY_TURN_STATE;
+                    *menuState = MENU_MAIN;
+                }
+            }
+            break;
+    }
+}
+static void EndTurnLogic(int* menuState, Character* enemy) {
+    if (fugaRiuscita) *menuState = MENU_ESCAPED;
+    if (graziaRicevuta) *menuState = MENU_MERCY;
+    if (enemy->stats[STAT_HP] <= 0 && *menuState != MENU_VICTORY) *menuState = MENU_VICTORY;
+    bool allDead = true;
+    for (int i = 0; i < 4; i++) {
+        if (characterButtons[i].logic.stats[STAT_HP] > 0 ) {
+            allDead = false;
+            break;
+        }   
+    }
+    if (allDead && *menuState != MENU_DEFEAT) *menuState = MENU_DEFEAT;
+
+    turn++;
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 6; j++) {
+            if (characterButtons[i].skills[j].logic.cooldown > 0)
+                characterButtons[i].skills[j].logic.cooldown--;
+        } 
+    }
+    if (isPoisoned && poisonTurn > 0) {
+        ApplyDamage(enemy, poisonDamage);
+        poisonTurn--;
+        if (poisonTurn == 0) isPoisoned = false;
+    }
+    if (*menuState != MENU_ESCAPED && *menuState != MENU_MERCY && *menuState != MENU_VICTORY && *menuState != MENU_DEFEAT)
+        gameState = PLAYER_TURN_STATE;
+}
 void UpdateMenuLogic(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen) {
 
-    static bool enemyTargetRandom = false;
-    static bool fugaRiuscita = false;
-    static bool graziaRicevuta = false;
     // Isolated Clash state handling (state 8)
-    if (*menuState == 8) {
+    if (*menuState == MENU_CLASH) {
         bool clashFinished = ActionClash(&characterButtons[*selectedCharacter].logic, enemy, battleLog, maxLogLen);
-        if (clashFinished) {
-            *menuState = 0; 
-        }
+        if (clashFinished) *menuState = MENU_MAIN; 
         return;
     }
 
     switch (gameState) {
         case PLAYER_TURN_STATE:
-            switch (*menuState) {
-                case 0:
-                    if (CheckCollisionPointRec(mousePos, mainButtons[0].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) *menuState = 1;
-                    if (CheckCollisionPointRec(mousePos, mainButtons[1].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) *menuState = 3;
-                    if (CheckCollisionPointRec(mousePos, mainButtons[2].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) *menuState = 4;
-                    if (CheckCollisionPointRec(mousePos, mainButtons[3].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) *menuState = 6;
-                    break;
-                case 1:
-                    for (int i = 0; i < 4; i++) {
-                        if (characterButtons[i].logic.stats[STAT_HP] > 0) {
-                            if (CheckCollisionPointRec(mousePos, characterButtons[i].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                            *selectedCharacter = i;
-                            *menuState = 2;
-                            }
-                        }
-                    }
-                    break;
-                case 2:
-                    for (int j = 0; j < 6; j++)  {  
-                        if (characterButtons[*selectedCharacter].skills[j].logic.cooldown == 0) {
-                            if (CheckCollisionPointRec(mousePos, characterButtons[*selectedCharacter].skills[j].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-
-                                if (j > 2) characterButtons[*selectedCharacter].skills[j].logic.cooldown = 4; 
-
-                                if (characterButtons[*selectedCharacter].skills[j].logic.harm == true) {
-                                    if (rand() % 100 < 15 && j < 3 ) {
-                                        *menuState = 8;
-                                        return;
-                                    }
-                                    int priority = CheckPriority(&characterButtons[*selectedCharacter].logic, enemy);
-                                    if (priority == 1 || (priority == 2 && rand() % 2 == 0)) {
-                                        snprintf(battleLog, maxLogLen, "[INTERCEPT] %s is faster and moves first!", enemy->name);
-                                        EnemyTurn(enemy, &characterButtons[*selectedCharacter].logic, battleLog, maxLogLen);
-                                        if (characterButtons[*selectedCharacter].logic.stats[STAT_HP] > 0) {
-                                            char playerLog[256];
-                                            ActionSkill(&characterButtons[*selectedCharacter].logic, enemy, &characterButtons[*selectedCharacter].skills[j].logic, playerLog, sizeof(playerLog));
-                                            strncat(battleLog, "\n", maxLogLen - strlen(battleLog) - 1);
-                                            strncat(battleLog, playerLog, maxLogLen - strlen(battleLog) - 1);
-                                        } else {
-                                            strncat(battleLog, "\n...but the hero was knocked out before acting!", maxLogLen - strlen(battleLog) - 1);
-                                        }
-                                        gameState = ROUND_END_STATE;
-                                    } 
-                                    else {
-                                        ActionSkill(&characterButtons[*selectedCharacter].logic, enemy, &characterButtons[*selectedCharacter].skills[j].logic, battleLog, maxLogLen);
-                                        enemyTargetRandom = true; 
-                                        gameState = ENEMY_TURN_STATE;
-                                    }
-                                } 
-                                else {
-                                    ActionSkill(&characterButtons[*selectedCharacter].logic, enemy, &characterButtons[*selectedCharacter].skills[j].logic, battleLog, maxLogLen);
-                                    enemyTargetRandom = true; 
-                                    gameState = ENEMY_TURN_STATE;
-                                }
-                                *menuState = 0; 
-                                break;          
-                            }
-                        }
-                    } 
-                    break;
-                case 3:
-                    for (int i = 0; i < 4; i++) {
-                        if (characterButtons[i].logic.stats[STAT_HP] > 0) {
-                            if (CheckCollisionPointRec(mousePos, characterButtons[i].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                                ActionGuard(&characterButtons[i].logic, battleLog, maxLogLen);
-                                enemyTargetRandom = true; 
-                                gameState = ENEMY_TURN_STATE;
-                                *menuState = 0;
-                            }
-                        }
-                    }
-                    break;
-                case 4: 
-                    for (int i = 0; i < 4; i++) {
-                        if (characterButtons[i].logic.stats[STAT_HP] > 0) {
-                            if (CheckCollisionPointRec(mousePos, characterButtons[i].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                                *selectedCharacter = i;
-                                *menuState = 5;
-                            }
-                        }
-                    }
-                    break;
-                case 5:
-                    for (int i = 0; i < 5; i++) {
-                        if (bag[i].quantity > 0) {
-                            if (CheckCollisionPointRec(mousePos, bag[i].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                                ActionUseObject(bag[i].itemId, &characterButtons[*selectedCharacter].logic, enemy, battleLog, maxLogLen);
-                                bag[i].quantity--;
-                                enemyTargetRandom = true;
-                                gameState = ENEMY_TURN_STATE;
-                                *menuState = 0;
-                            }
-                        }
-                    }
-                    Rectangle backRect = { 40 + (5 % 3) * 240, 420 + (5 / 3) * 80, 220, 60 };
-                    if (CheckCollisionPointRec(mousePos, backRect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) 
-                        *menuState = 0;       
-                    break;
-                case 6:      
-                    int leaderIdx = 0;
-                    for (int i = 0; i < 4; i++) {
-                        if (characterButtons[i].logic.stats[STAT_HP] > 0) {
-                            leaderIdx = i;
-                            break;
-                        }
-                    }
-                    if (CheckCollisionPointRec(mousePos, (Rectangle){350, 240, 100, 40}) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                        if (ActionEscape(&characterButtons[leaderIdx].logic, enemy, battleLog, maxLogLen)) {
-                            fugaRiuscita = true;
-                            gameState = ROUND_END_STATE;
-                        } else {
-                            enemyTargetRandom = true;
-                            gameState = ENEMY_TURN_STATE;
-                            *menuState = 0;
-                            }
-                    }
-                    if (CheckCollisionPointRec(mousePos, (Rectangle){350, 310, 100, 40}) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                        if (ActionSpare(battleLog, maxLogLen)) {
-                            graziaRicevuta = true;
-                            gameState = ROUND_END_STATE;
-                        } else {
-                            enemyTargetRandom = true;
-                            gameState = ENEMY_TURN_STATE;
-                            *menuState = 0;
-                        }
-                    }
-                    break;
-            }
+            PlayerTurnLogic(mousePos, menuState, selectedCharacter, enemy, battleLog, maxLogLen);
             break;
         case ENEMY_TURN_STATE:
             if (enemyTargetRandom) {
                 EnemyTurnRandomTarget(enemy, battleLog, maxLogLen);
                 enemyTargetRandom = false;
-            } else {
+            } else 
                 EnemyTurn(enemy, &characterButtons[*selectedCharacter].logic, battleLog, maxLogLen);
-            }
             gameState = ROUND_END_STATE;
             break;
         case ROUND_END_STATE:
-            if (fugaRiuscita) *menuState = 7;
-            if (graziaRicevuta) *menuState = 9;
-            if (enemy->stats[STAT_HP] <= 0 && *menuState != 10) *menuState = 10;
-            bool allDead = true;
-            for (int i = 0; i < 4; i++) {
-                if (characterButtons[i].logic.stats[STAT_HP] > 0 ) {
-                    allDead = false;
-                    break;
-                }   
-            }
-            if (allDead && *menuState != 11) *menuState = 11;
-
-            turn++;
-            for (int i = 0; i < 4; i++) {
-                for (int j = 3; j < 6; j++) {
-                    if (characterButtons[i].skills[j].logic.cooldown > 0)
-                        characterButtons[i].skills[j].logic.cooldown--;
-                } 
-            }
-            if (isPoisoned && poisonTurn > 0) {
-                enemy->stats[STAT_HP] -= poisonDamage;
-                if (enemy->stats[STAT_HP] < 0) enemy->stats[STAT_HP] = 0;
-                poisonTurn--;
-                if (poisonTurn == 0) isPoisoned = false;
-            }
-            if (*menuState != 7 && *menuState != 9 && *menuState != 10 && *menuState != 11)
-                gameState = PLAYER_TURN_STATE;
+            EndTurnLogic(menuState, enemy);
             break;    
     }  
 }
-
+static void DrawMenuButtons(void){
+    DrawRectangle(0, 500, 800, 100, DARKGRAY);
+    for (int i = 0; i < 4; i++) {
+        DrawRectangleRec(mainButtons[i].rect, LIGHTGRAY);
+        DrawRectangleLinesEx(mainButtons[i].rect, 1, BLACK);
+        DrawText(mainButtons[i].name, mainButtons[i].rect.x + 40, mainButtons[i].rect.y + 30, 20, BLACK);
+    }
+}
+static void DrawCharacterButtons(Color baseColor, Color textColor) {
+    DrawRectangle(0, 500, 800, 100, DARKGRAY);
+    for (int i = 0; i < 4; i++) {
+        DrawRectangleRec(characterButtons[i].rect, baseColor);
+        DrawRectangleLinesEx(characterButtons[i].rect, 1, textColor);
+        DrawText(characterButtons[i].name, characterButtons[i].rect.x + 20, characterButtons[i].rect.y + 30, 20, textColor);
+    }
+}
 void DrawMenuUI(int menuState, int selectedCharacter, const Character* enemy, const char* battleLog) {
     // Enemy info, always visible on screen
     DrawText(enemy->name, 50, 50, 22, RED);
@@ -269,30 +284,18 @@ void DrawMenuUI(int menuState, int selectedCharacter, const Character* enemy, co
     DrawText(battleLog, 65, 165, 16, WHITE);
 
     // Hero info
-    for(int i = 0; i < 4; i++) {
-        DrawText(TextFormat("%s HP: %d", characterButtons[i].name, characterButtons[i].logic.stats[STAT_HP]), 50 + i*180, 300, 18, GREEN);
-    }
+    for(int i = 0; i < 4; i++) DrawText(TextFormat("%s HP: %d", characterButtons[i].name, characterButtons[i].logic.stats[STAT_HP]), 50 + i*180, 300, 18, GREEN);
 
     switch (gameState) {
         case PLAYER_TURN_STATE:
             switch (menuState) {
-                case 0:
-                    DrawRectangle(0, 500, 800, 100, DARKGRAY);
-                    for (int i = 0; i < 4; i++) {
-                        DrawRectangleRec(mainButtons[i].rect, LIGHTGRAY);
-                        DrawRectangleLinesEx(mainButtons[i].rect, 1, BLACK);
-                        DrawText(mainButtons[i].name, mainButtons[i].rect.x + 40, mainButtons[i].rect.y + 30, 20, BLACK);
-                    }
+                case MENU_MAIN:
+                    DrawMenuButtons();
                     break;  
-                case 1:
-                    DrawRectangle(0, 500, 800, 100, DARKGRAY);
-                    for (int i = 0; i < 4; i++) {
-                        DrawRectangleRec(characterButtons[i].rect, MAROON);
-                        DrawRectangleLinesEx(characterButtons[i].rect, 1, WHITE);
-                        DrawText(characterButtons[i].name, characterButtons[i].rect.x + 20, characterButtons[i].rect.y + 30, 20, WHITE);
-                    }
+                case MENU_SELECT_CHAR_ATTACK:
+                    DrawCharacterButtons(MAROON, WHITE);
                     break;
-                case 2:
+                case MENU_SELECT_SKILL:
                     DrawRectangle(0, 400, 800, 200, DARKGRAY);
                     for (int j = 0; j < 6; j++) {
                         if (characterButtons[selectedCharacter].skills[j].logic.cooldown == 0) {
@@ -309,21 +312,13 @@ void DrawMenuUI(int menuState, int selectedCharacter, const Character* enemy, co
                         }
                     }
                     break;
-                case 3:
-                    DrawRectangle(0, 500, 800, 100, DARKGRAY);
-                    for (int i = 0; i < 4; i++) {
-                        DrawRectangleRec(characterButtons[i].rect, SKYBLUE);
-                        DrawText(characterButtons[i].name, characterButtons[i].rect.x + 20, characterButtons[i].rect.y + 30, 20, BLACK);
-                    }
+                case MENU_SELECT_CHAR_GUARD:
+                    DrawCharacterButtons(SKYBLUE, BLACK);
                     break;
-                case 4:
-                    DrawRectangle(0, 500, 800, 100, DARKGRAY);
-                    for (int i = 0; i < 4; i++) {
-                        DrawRectangleRec(characterButtons[i].rect, GOLD);
-                        DrawText(characterButtons[i].name, characterButtons[i].rect.x + 20, characterButtons[i].rect.y + 30, 20, BLACK);
-                    }
+                case MENU_SELECT_CHAR_BAG:
+                    DrawCharacterButtons(GOLD, BLACK);
                     break;
-                case 5:
+                case MENU_BAG_ITEMS:
                     DrawRectangle(0, 400, 800, 200, DARKGRAY);
                     for (int i = 0; i < 5; i++) {
                         if (bag[i].quantity > 0) {
@@ -342,7 +337,7 @@ void DrawMenuUI(int menuState, int selectedCharacter, const Character* enemy, co
                     DrawRectangleLines(backX, backY, 220, 60, WHITE);
                     DrawText("BACK", backX + 80, backY + 20, 18, WHITE);  
                     break;
-                case 6: 
+                case MENU_ESCAPE_SPARE: 
                     DrawRectangle(250, 200, 300, 220, DARKGRAY);
                     DrawRectangleLines(250, 200, 300, 220, WHITE);
             
@@ -352,7 +347,7 @@ void DrawMenuUI(int menuState, int selectedCharacter, const Character* enemy, co
                     DrawRectangle(350, 310, 100, 40, LIGHTGRAY);
                     DrawText("Spare", 365, 320, 18, BLACK);
                     break;
-                case 8:
+                case MENU_CLASH:
                     DrawRectangle(100, 380, 600, 200, BLACK);
                     DrawRectangleLines(100, 380, 600, 200, RED);
                     DrawText("!! ATTACK CLASH !!", 295, 400, 24, ORANGE);
@@ -374,33 +369,23 @@ void DrawMenuUI(int menuState, int selectedCharacter, const Character* enemy, co
             }
             break;
         case ENEMY_TURN_STATE:
-            DrawRectangle(0, 500, 800, 100, DARKGRAY);
-            for (int i = 0; i < 4; i++) {
-                DrawRectangleRec(mainButtons[i].rect, LIGHTGRAY);
-                DrawRectangleLinesEx(mainButtons[i].rect, 1, BLACK);
-                DrawText(mainButtons[i].name, mainButtons[i].rect.x + 40, mainButtons[i].rect.y + 30, 20, BLACK);
-            }
+            DrawMenuButtons();
             break;
         case ROUND_END_STATE:
-            DrawRectangle(0, 500, 800, 100, DARKGRAY);
-            for (int i = 0; i < 4; i++) {
-                DrawRectangleRec(mainButtons[i].rect, LIGHTGRAY);
-                DrawRectangleLinesEx(mainButtons[i].rect, 1, BLACK);
-                DrawText(mainButtons[i].name, mainButtons[i].rect.x + 40, mainButtons[i].rect.y + 30, 20, BLACK);
-            }
-            if (menuState == 7) {
+            DrawMenuButtons();
+            if (menuState == MENU_ESCAPED) {
                 DrawRectangle(0, 0, 800, 600, BLACK);
                 DrawText("ESCAPED!", 270, 250, 32, SKYBLUE);
             }
-            if (menuState == 9) {
+            if (menuState == MENU_MERCY) {
                 DrawRectangle(0, 0, 800, 600, BLACK);
                 DrawText("MERCY GIVEN!", 270, 250, 32, SKYBLUE);
             }
-            if (menuState == 10) {
+            if (menuState == MENU_VICTORY) {
                 DrawRectangle(0, 0, 800, 600, BLACK);
                 DrawText("VICTORY!", 270, 250, 32, GOLD);
             }
-            if (menuState == 11) {
+            if (menuState == MENU_DEFEAT) {
                 DrawRectangle(0, 0, 800, 600, BLACK);
                 DrawText("DEFEAT...", 270, 250, 32, RED);
             }

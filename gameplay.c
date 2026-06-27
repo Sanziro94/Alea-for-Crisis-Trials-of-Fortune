@@ -21,81 +21,64 @@ int poisonDamage = 0;
 bool isPoisoned = false;
 
 
-int RollDice(int type)
-{
-    switch(type)
-    {
-        case 0:  return rand() % 6 + 1;
-        case 1:  return rand() % 12 + 1;
-        case 2:  return rand() % 2 + 1;
-        case 3:  return rand() % 100 + 1;
-        default: return rand() % 6 + 1;
-    }
+int RollDice(int type) {
+    int diceSides[] = {6, 12, 2, 100};
+    int sides = (type >= 0 && type < 4) ? diceSides[type] : 6;
+    return rand() % sides + 1;
 }
 
-int CheckPriority(Character* ally, Character* enemy)
-{
+int CheckPriority(Character* ally, Character* enemy) {
     if (ally->stats[STAT_SPD] > enemy->stats[STAT_SPD]) return 0; 
     if (ally->stats[STAT_SPD] < enemy->stats[STAT_SPD]) return 1; 
     return 2;                               
 }
-void ActionAttackPhysical(Character* attacker, Character* target, char* outMessage, int maxMsgLen)
-{
-    int base_damage = attacker->stats[STAT_ATK];
-    int defense = target->stats[STAT_DEF];
-    int final_damage = base_damage - defense;
-
+int ApplyDamage(Character* target, int dmg) {
+    if (dmg < 1) dmg = 1;
+    target->stats[STAT_HP] -= dmg;
+    if (target->stats[STAT_HP] < 0) target->stats[STAT_HP] = 0;
+    return dmg;
+}
+void ActionAttackPhysical(Character* attacker, Character* target, char* outMessage, int maxMsgLen) {
+    int damage = attacker->stats[STAT_ATK] - target->stats[STAT_DEF];
     if (target->guarding) {
-        final_damage -= guard_stat; 
+        damage -= guard_stat; 
         target->guarding = false; 
     }
-
-    if (final_damage <= 0) final_damage = 1;
-
-    target->stats[STAT_HP] -= final_damage;
-    if (target->stats[STAT_HP] < 0) target->stats[STAT_HP] = 0;
-
-    snprintf(outMessage, maxMsgLen, "%s attacks %s, dealing %d damage!", attacker->name, target->name, final_damage);
+    damage = ApplyDamage(target, damage);
+    snprintf(outMessage, maxMsgLen, "%s attacks %s, dealing %d damage!", attacker->name, target->name, damage);
 }
 
-void ActionSkill(Character* attacker, Character* target, Skill* skill, char* outMessage, int maxMsgLen)
-{
+void ActionSkill(Character* attacker, Character* target, Skill* skill, char* outMessage, int maxMsgLen) {
     int dice = RollDice(0);
     int final_damage = 0;
 
-    switch (skill->type)
-    {
+    switch (skill->type) {
         case SKILL_NORMAL_DAMAGE:
             final_damage = (attacker->stats[STAT_ATK] + skill->value + dice) - target->stats[STAT_DEF];
             if (target->guarding) { final_damage -= guard_stat; target->guarding = false; }
-            if (final_damage <= 0) final_damage = 1;
-            target->stats[STAT_HP] -= final_damage;
+            final_damage = ApplyDamage(target, final_damage);
             snprintf(outMessage, maxMsgLen, "%s uses %s! Dice: %d. Deals %d damage!", attacker->name, skill->name, dice, final_damage);
             break;
 
         case SKILL_PIERCING:
 	        final_damage = (attacker->stats[STAT_ATK] + skill->value + dice);
-            if (final_damage <= 0) final_damage = 1;
-            target->stats[STAT_HP] -= final_damage;
+            final_damage = ApplyDamage(target, final_damage);
             snprintf(outMessage, maxMsgLen, "%s uses %s (Piercing)! Ignores defense and deals %d damage!", attacker->name, skill->name, final_damage);
             break;
 
         case SKILL_VAMPIRISM:
             final_damage = (attacker->stats[STAT_ATK] + skill->value + dice) - target->stats[STAT_DEF];
-            if (final_damage <= 0) final_damage = 1;
-            target->stats[STAT_HP] -= final_damage;
+            final_damage = ApplyDamage(target, final_damage);
             attacker->stats[STAT_HP] += final_damage / 2;
             if (attacker->stats[STAT_HP] > attacker->maxHealth) attacker->stats[STAT_HP] = attacker->maxHealth;
             snprintf(outMessage, maxMsgLen, "%s uses %s! Deals %d damage and heals for %d HP!", attacker->name, skill->name, final_damage, final_damage / 2);
             break;
-
         case SKILL_BUFF:
             attacker->stats[skill->affected_stat] += skill->value;
             const char* statNames[] = {"HP", "Attack", "Defense", "Speed"};
             snprintf(outMessage, maxMsgLen, "%s uses %s! Raises %s by %d!", attacker->name, skill->name, statNames[skill->affected_stat], skill->value);
             break;
     }
-    if (target->stats[STAT_HP] < 0) target->stats[STAT_HP] = 0;
 }
 
 void ActionUseObject(int itemIndex, Character* attacker, Character* target, char* outMessage, int maxMsgLen)
@@ -160,7 +143,7 @@ int targetSequence[SEQUENCE_LENGTH] = { 0 };
 const char* sequenceNames[SEQUENCE_LENGTH] = { NULL };
 
 // Random key sequence generator for the QTE
-void GenerateClashSequence(void) {
+static void GenerateClashSequence(void) {
     int keys[4] = { KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT };
     const char* names[4] = { "UP", "DOWN", "LEFT", "RIGHT" };
 
@@ -188,9 +171,7 @@ bool ActionClash(Character* attacker, Character* target, char* outMessage, int m
     if (timeRemaining <= 0.0f) {
         snprintf(outMessage, maxMsgLen, "Time is up! %s wins the clash!", target->name);
         int dmg = (target->stats[STAT_ATK] * 2) - attacker->stats[STAT_DEF];
-        if (dmg < 1) dmg = 1;
-        attacker->stats[STAT_HP] -= dmg;
-        if (attacker->stats[STAT_HP] < 0) attacker->stats[STAT_HP] = 0;
+        dmg = ApplyDamage(attacker, dmg);
         clashInitialized = false;
         return true;
     }
@@ -202,23 +183,18 @@ bool ActionClash(Character* attacker, Character* target, char* outMessage, int m
         if (currentStep >= SEQUENCE_LENGTH) {
             snprintf(outMessage, maxMsgLen, "%s wins the clash with a devastating blow!", attacker->name);
             int dmg = (attacker->stats[STAT_ATK] * 2) - target->stats[STAT_DEF];
-            if (dmg < 1) dmg = 1;
-            target->stats[STAT_HP] -= dmg;
-            if (target->stats[STAT_HP] < 0) target->stats[STAT_HP] = 0;
+            dmg = ApplyDamage(target, dmg);
             clashInitialized = false; 
             return true;
         }
     } 
     else {
         int pressedKey = GetKeyPressed();
-        if (pressedKey != 0 && pressedKey != expectedKey) {
-            timeRemaining -= 0.4f; 
-        }
+        if (pressedKey != 0 && pressedKey != expectedKey) 
+            timeRemaining -= 0.4f;   
     }
-
     return false; 
 }
-
 // Enemy AI logic
 void EnemyTurn(Character* enemy, Character* target, char* outMessage, int maxMsgLen) {
     if (enemy->stats[STAT_HP] <= 0) return;
@@ -228,12 +204,9 @@ void EnemyTurn(Character* enemy, Character* target, char* outMessage, int maxMsg
 
     if (enemy->stats[STAT_HP] < (enemy->maxHealth * 0.35f) && decision < 50) 
         ActionGuard(enemy, enemyAction, sizeof(enemyAction));
-    
     else if (decision > 75) {
         int dmg = (enemy->stats[STAT_ATK] * 1.5f) - target->stats[STAT_DEF];
-        if (dmg < 1) dmg = 1;
-        target->stats[STAT_HP] -= dmg;
-        if (target->stats[STAT_HP] < 0) target->stats[STAT_HP] = 0;
+        dmg = ApplyDamage(target, dmg);
         snprintf(enemyAction, sizeof(enemyAction), "%s unleashes a devastating heavy attack!", enemy->name);
     } 
     else 

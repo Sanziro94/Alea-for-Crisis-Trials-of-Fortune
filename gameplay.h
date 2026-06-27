@@ -37,6 +37,7 @@ typedef struct {
 // Gameplay function declarations
 int RollDice(int type);
 int CheckPriority(Character* ally, Character* enemy);
+int ApplyDamage(Character* target, int dmg);
 void ActionAttackPhysical(Character* attacker, Character* target, char* outMessage, int maxMsgLen);
 void ActionSkill(Character* attacker, Character* target, Skill* skill, char* outMessage, int maxMsgLen);
 void ActionUseObject(int itemIndex, Character* attacker, Character* target, char* outMessage, int maxMsgLen);
