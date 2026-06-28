@@ -1,4 +1,5 @@
 #include "ui.h"
+#include "menustate.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -17,13 +18,13 @@ struct CharacterUI characterButtons[4] = {
     {"Cyborg",    {16 + 3*196, 510, 180, 80}, {{"Normal Skill C1"}, {"Normal Skill C2"}, {"Normal Skill C3"}, {"Piercing Skill C4"}, {"Vampirism Skill C5"}, {"Buff Skill C6"}}}
 };
 
-static struct ObjectUI bag[5];
+struct ObjectUI bag[5];
 static int itemTypesInBag = 5;
-static States gameState;
+States gameState;
 static int turn;
-static bool enemyTargetRandom = false;
-static bool fugaRiuscita = false;
-static bool graziaRicevuta = false;
+bool enemyTargetRandom = false;
+bool fugaRiuscita = false;
+bool graziaRicevuta = false;
 
 void InitGameData(void) {
     // Mercenary
@@ -73,137 +74,18 @@ void InitGameData(void) {
         else bag[i].quantity = 1;
     }
 }
-static void PlayerTurnLogic (Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen) {
-    switch (*menuState) {
-        case MENU_MAIN:
-            if (CheckCollisionPointRec(mousePos, mainButtons[0].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) *menuState = MENU_SELECT_CHAR_ATTACK;
-            if (CheckCollisionPointRec(mousePos, mainButtons[1].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) *menuState = MENU_SELECT_CHAR_GUARD;
-            if (CheckCollisionPointRec(mousePos, mainButtons[2].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) *menuState = MENU_SELECT_CHAR_BAG;
-            if (CheckCollisionPointRec(mousePos, mainButtons[3].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) *menuState = MENU_ESCAPE_SPARE;
-            break;
-        case MENU_SELECT_CHAR_ATTACK:
-            for (int i = 0; i < 4; i++) {
-                if (characterButtons[i].logic.stats[STAT_HP] > 0) {
-                    if (CheckCollisionPointRec(mousePos, characterButtons[i].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                    *selectedCharacter = i;
-                    *menuState = MENU_SELECT_SKILL;
-                    }
-                }
-            }
-            break;
-        case MENU_SELECT_SKILL:
-            for (int j = 0; j < 6; j++)  {  
-                if (characterButtons[*selectedCharacter].skills[j].logic.cooldown == 0) {
-                    if (CheckCollisionPointRec(mousePos, characterButtons[*selectedCharacter].skills[j].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-
-                        if (j > 2) characterButtons[*selectedCharacter].skills[j].logic.cooldown = 4; 
-
-                        if (characterButtons[*selectedCharacter].skills[j].logic.harm == true) {
-                            if (rand() % 100 < 15 && j < 3 ) {
-                                *menuState = MENU_CLASH;
-                                return;
-                            }
-                            int priority = CheckPriority(&characterButtons[*selectedCharacter].logic, enemy);
-                            if (priority == 1 || (priority == 2 && rand() % 2 == 0)) {
-                                snprintf(battleLog, maxLogLen, "[INTERCEPT] %s is faster and moves first!", enemy->name);
-                                EnemyTurn(enemy, &characterButtons[*selectedCharacter].logic, battleLog, maxLogLen);
-                                if (characterButtons[*selectedCharacter].logic.stats[STAT_HP] > 0) {
-                                    char playerLog[256];
-                                    ActionSkill(&characterButtons[*selectedCharacter].logic, enemy, &characterButtons[*selectedCharacter].skills[j].logic, playerLog, sizeof(playerLog));
-                                    strncat(battleLog, "\n", maxLogLen - strlen(battleLog) - 1);
-                                    strncat(battleLog, playerLog, maxLogLen - strlen(battleLog) - 1);
-                                } else {
-                                    strncat(battleLog, "\n...but the hero was knocked out before acting!", maxLogLen - strlen(battleLog) - 1);
-                                }
-                                gameState = ROUND_END_STATE;
-                            } 
-                            else {
-                                ActionSkill(&characterButtons[*selectedCharacter].logic, enemy, &characterButtons[*selectedCharacter].skills[j].logic, battleLog, maxLogLen);
-                                enemyTargetRandom = true; 
-                                gameState = ENEMY_TURN_STATE;
-                            }
-                        } 
-                        else {
-                            ActionSkill(&characterButtons[*selectedCharacter].logic, enemy, &characterButtons[*selectedCharacter].skills[j].logic, battleLog, maxLogLen);
-                            enemyTargetRandom = true; 
-                            gameState = ENEMY_TURN_STATE;
-                        }
-                        *menuState = MENU_MAIN; 
-                        break;          
-                    }
-                }
-            } 
-            break;
-        case MENU_SELECT_CHAR_GUARD:
-            for (int i = 0; i < 4; i++) {
-                if (characterButtons[i].logic.stats[STAT_HP] > 0) {
-                    if (CheckCollisionPointRec(mousePos, characterButtons[i].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                        ActionGuard(&characterButtons[i].logic, battleLog, maxLogLen);
-                        enemyTargetRandom = true; 
-                        gameState = ENEMY_TURN_STATE;
-                        *menuState = MENU_MAIN;
-                    }
-                }
-            }
-            break;
-        case MENU_SELECT_CHAR_BAG: 
-            for (int i = 0; i < 4; i++) {
-                if (characterButtons[i].logic.stats[STAT_HP] > 0) {
-                    if (CheckCollisionPointRec(mousePos, characterButtons[i].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                        *selectedCharacter = i;
-                        *menuState = MENU_BAG_ITEMS;
-                    }
-                }
-            }
-            break;
-        case MENU_BAG_ITEMS:
-            for (int i = 0; i < 5; i++) {
-                if (bag[i].quantity > 0) {
-                    if (CheckCollisionPointRec(mousePos, bag[i].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                        ActionUseObject(bag[i].itemId, &characterButtons[*selectedCharacter].logic, enemy, battleLog, maxLogLen);
-                        bag[i].quantity--;
-                        enemyTargetRandom = true;
-                        gameState = ENEMY_TURN_STATE;
-                        *menuState = MENU_MAIN;
-                    }
-                }
-            }
-            Rectangle backRect = { 40 + (5 % 3) * 240, 420 + (5 / 3) * 80, 220, 60 };
-            if (CheckCollisionPointRec(mousePos, backRect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) 
-                *menuState = MENU_MAIN;       
-            break;
-        case MENU_ESCAPE_SPARE:      
-            int leaderIdx = 0;
-            for (int i = 0; i < 4; i++) {
-                if (characterButtons[i].logic.stats[STAT_HP] > 0) {
-                    leaderIdx = i;
-                    break;
-                }
-            }
-            if (CheckCollisionPointRec(mousePos, (Rectangle){350, 240, 100, 40}) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                if (ActionEscape(&characterButtons[leaderIdx].logic, enemy, battleLog, maxLogLen)) {
-                    fugaRiuscita = true;
-                    gameState = ROUND_END_STATE;
-                } else {
-                    enemyTargetRandom = true;
-                    gameState = ENEMY_TURN_STATE;
-                    *menuState = MENU_MAIN;
-                    }
-            }
-            if (CheckCollisionPointRec(mousePos, (Rectangle){350, 310, 100, 40}) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                if (ActionSpare(battleLog, maxLogLen)) {
-                    graziaRicevuta = true;
-                    gameState = ROUND_END_STATE;
-                } else {
-                    enemyTargetRandom = true;
-                    gameState = ENEMY_TURN_STATE;
-                    *menuState = MENU_MAIN;
-                }
-            }
-            break;
-    }
+void PlayerTurnLogic (Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen) {
+    MenuStateTable[*menuState](mousePos, menuState, selectedCharacter, enemy, battleLog, maxLogLen);
 }
-static void EndTurnLogic(int* menuState, Character* enemy) {
+static void EnemyTurnLogic(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen) {
+    if (enemyTargetRandom) {
+        EnemyTurnRandomTarget(enemy, battleLog, maxLogLen);
+        enemyTargetRandom = false;
+    } else 
+        EnemyTurn(enemy, &characterButtons[*selectedCharacter].logic, battleLog, maxLogLen);
+    gameState = ROUND_END_STATE;
+}
+static void EndTurnLogic(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen) {
     if (fugaRiuscita) *menuState = MENU_ESCAPED;
     if (graziaRicevuta) *menuState = MENU_MERCY;
     if (enemy->stats[STAT_HP] <= 0 && *menuState != MENU_VICTORY) *menuState = MENU_VICTORY;
@@ -231,6 +113,11 @@ static void EndTurnLogic(int* menuState, Character* enemy) {
     if (*menuState != MENU_ESCAPED && *menuState != MENU_MERCY && *menuState != MENU_VICTORY && *menuState != MENU_DEFEAT)
         gameState = PLAYER_TURN_STATE;
 }
+void (*GameStateTable[])(Vector2, int* , int* , Character* , char* , int)={
+    PlayerTurnLogic,
+    EnemyTurnLogic,
+    EndTurnLogic
+};
 void UpdateMenuLogic(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen) {
 
     // Isolated Clash state handling (state 8)
@@ -239,23 +126,7 @@ void UpdateMenuLogic(Vector2 mousePos, int* menuState, int* selectedCharacter, C
         if (clashFinished) *menuState = MENU_MAIN; 
         return;
     }
-
-    switch (gameState) {
-        case PLAYER_TURN_STATE:
-            PlayerTurnLogic(mousePos, menuState, selectedCharacter, enemy, battleLog, maxLogLen);
-            break;
-        case ENEMY_TURN_STATE:
-            if (enemyTargetRandom) {
-                EnemyTurnRandomTarget(enemy, battleLog, maxLogLen);
-                enemyTargetRandom = false;
-            } else 
-                EnemyTurn(enemy, &characterButtons[*selectedCharacter].logic, battleLog, maxLogLen);
-            gameState = ROUND_END_STATE;
-            break;
-        case ROUND_END_STATE:
-            EndTurnLogic(menuState, enemy);
-            break;    
-    }  
+    GameStateTable[gameState](mousePos, menuState, selectedCharacter, enemy, battleLog, maxLogLen);
 }
 static void DrawMenuButtons(void){
     DrawRectangle(0, 500, 800, 100, DARKGRAY);

@@ -47,10 +47,16 @@ struct ObjectUI {
 
 extern struct Buttons mainButtons[4];
 extern struct CharacterUI characterButtons[4];
+extern struct ObjectUI bag[5];
+extern States gameState;
+extern bool enemyTargetRandom;
+extern bool fugaRiuscita;
+extern bool graziaRicevuta;
 
 // UI and menu management functions
 void InitGameData(void);
 void UpdateMenuLogic(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen);
 void DrawMenuUI(int menuState, int selectedCharacter, const Character* enemy, const char* battleLog);
+void PlayerTurnLogic (Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen);
 
 #endif
