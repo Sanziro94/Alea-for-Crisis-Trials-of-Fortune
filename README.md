@@ -11,3 +11,14 @@ and do :
 *chmod +x your-file-name*
 and type :
 *./your-file-name*
+
+## Build
+
+Requirements:
+- raylib
+- gcc
+- Make
+
+```
+make build
+```
