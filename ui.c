@@ -89,6 +89,12 @@ static void EnemyTurnLogic(Vector2 mousePos, int* menuState, int* selectedCharac
 static void EndTurnLogic(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen) {
     if (fugaRiuscita) *menuState = MENU_ESCAPED;
     if (graziaRicevuta) *menuState = MENU_MERCY;
+    
+    if (isPoisoned && poisonTurn > 0) {
+        ApplyDamage(enemy, poisonDamage);
+        poisonTurn--;
+        if (poisonTurn == 0) isPoisoned = false;
+    }
     if (enemy->stats[STAT_HP] <= 0 && *menuState != MENU_VICTORY) *menuState = MENU_VICTORY;
     bool allDead = true;
     for (int i = 0; i < 4; i++) {
@@ -105,11 +111,6 @@ static void EndTurnLogic(Vector2 mousePos, int* menuState, int* selectedCharacte
             if (characterButtons[i].skills[j].logic.cooldown > 0)
                 characterButtons[i].skills[j].logic.cooldown--;
         } 
-    }
-    if (isPoisoned && poisonTurn > 0) {
-        ApplyDamage(enemy, poisonDamage);
-        poisonTurn--;
-        if (poisonTurn == 0) isPoisoned = false;
     }
     if (*menuState != MENU_ESCAPED && *menuState != MENU_MERCY && *menuState != MENU_VICTORY && *menuState != MENU_DEFEAT)
         gameState = PLAYER_TURN_STATE;
@@ -133,10 +134,10 @@ static void DrawPlayerTurn(int menuState, int selectedCharacter) {
     MenuDrawTable[menuState](selectedCharacter);
 }
 static void DrawEnemyTurn(int menuState, int selectedCharacter) {
-    MenuDrawTable[menuState](selectedCharacter);
+    DrawMenuMain(selectedCharacter);
 }
 static void DrawTurnEnd(int menuState, int selectedCharacter) {
-    MenuDrawTable[menuState](selectedCharacter);
+    DrawMenuMain(selectedCharacter);
     if (menuState == MENU_ESCAPED) {
         DrawRectangle(0, 0, 800, 600, BLACK);
         DrawText("ESCAPED!", 270, 250, 32, SKYBLUE);
