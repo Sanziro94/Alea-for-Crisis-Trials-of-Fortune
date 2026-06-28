@@ -125,7 +125,10 @@ void UpdateMenuLogic(Vector2 mousePos, int* menuState, int* selectedCharacter, C
     // Isolated Clash state handling (state 8)
     if (*menuState == MENU_CLASH) {
         bool clashFinished = ActionClash(&characterButtons[*selectedCharacter].logic, enemy, battleLog, maxLogLen);
-        if (clashFinished) *menuState = MENU_MAIN; 
+        if (clashFinished) {
+            gameState = ROUND_END_STATE;
+            *menuState = MENU_MAIN; 
+        }
         return;
     }
     GameStateTable[gameState](mousePos, menuState, selectedCharacter, enemy, battleLog, maxLogLen);
