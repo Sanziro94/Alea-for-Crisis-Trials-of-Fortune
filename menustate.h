@@ -1,7 +1,6 @@
 #ifndef MENUSTATE_H
 #define MENUSTATE_H
 
-#include "raylib.h"
 #include "ui.h"
 
 void MenuMain(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen);

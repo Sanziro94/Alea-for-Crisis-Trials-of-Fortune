@@ -1,5 +1,6 @@
 #include "ui.h"
 #include "menustate.h"
+#include "menudraw.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -128,22 +129,36 @@ void UpdateMenuLogic(Vector2 mousePos, int* menuState, int* selectedCharacter, C
     }
     GameStateTable[gameState](mousePos, menuState, selectedCharacter, enemy, battleLog, maxLogLen);
 }
-static void DrawMenuButtons(void){
-    DrawRectangle(0, 500, 800, 100, DARKGRAY);
-    for (int i = 0; i < 4; i++) {
-        DrawRectangleRec(mainButtons[i].rect, LIGHTGRAY);
-        DrawRectangleLinesEx(mainButtons[i].rect, 1, BLACK);
-        DrawText(mainButtons[i].name, mainButtons[i].rect.x + 40, mainButtons[i].rect.y + 30, 20, BLACK);
+static void DrawPlayerTurn(int menuState, int selectedCharacter) {
+    MenuDrawTable[menuState](selectedCharacter);
+}
+static void DrawEnemyTurn(int menuState, int selectedCharacter) {
+    MenuDrawTable[menuState](selectedCharacter);
+}
+static void DrawTurnEnd(int menuState, int selectedCharacter) {
+    MenuDrawTable[menuState](selectedCharacter);
+    if (menuState == MENU_ESCAPED) {
+        DrawRectangle(0, 0, 800, 600, BLACK);
+        DrawText("ESCAPED!", 270, 250, 32, SKYBLUE);
+    }
+    if (menuState == MENU_MERCY) {
+        DrawRectangle(0, 0, 800, 600, BLACK);
+        DrawText("MERCY GIVEN!", 270, 250, 32, SKYBLUE);
+    }
+    if (menuState == MENU_VICTORY) {
+        DrawRectangle(0, 0, 800, 600, BLACK);
+        DrawText("VICTORY!", 270, 250, 32, GOLD);
+    }
+    if (menuState == MENU_DEFEAT) {
+        DrawRectangle(0, 0, 800, 600, BLACK);
+        DrawText("DEFEAT...", 270, 250, 32, RED);
     }
 }
-static void DrawCharacterButtons(Color baseColor, Color textColor) {
-    DrawRectangle(0, 500, 800, 100, DARKGRAY);
-    for (int i = 0; i < 4; i++) {
-        DrawRectangleRec(characterButtons[i].rect, baseColor);
-        DrawRectangleLinesEx(characterButtons[i].rect, 1, textColor);
-        DrawText(characterButtons[i].name, characterButtons[i].rect.x + 20, characterButtons[i].rect.y + 30, 20, textColor);
-    }
-}
+void (*GameDrawTable[])(int, int)={
+    DrawPlayerTurn,
+    DrawEnemyTurn,
+    DrawTurnEnd
+};
 void DrawMenuUI(int menuState, int selectedCharacter, const Character* enemy, const char* battleLog) {
     // Enemy info, always visible on screen
     DrawText(enemy->name, 50, 50, 22, RED);
@@ -157,109 +172,5 @@ void DrawMenuUI(int menuState, int selectedCharacter, const Character* enemy, co
     // Hero info
     for(int i = 0; i < 4; i++) DrawText(TextFormat("%s HP: %d", characterButtons[i].name, characterButtons[i].logic.stats[STAT_HP]), 50 + i*180, 300, 18, GREEN);
 
-    switch (gameState) {
-        case PLAYER_TURN_STATE:
-            switch (menuState) {
-                case MENU_MAIN:
-                    DrawMenuButtons();
-                    break;  
-                case MENU_SELECT_CHAR_ATTACK:
-                    DrawCharacterButtons(MAROON, WHITE);
-                    break;
-                case MENU_SELECT_SKILL:
-                    DrawRectangle(0, 400, 800, 200, DARKGRAY);
-                    for (int j = 0; j < 6; j++) {
-                        if (characterButtons[selectedCharacter].skills[j].logic.cooldown == 0) {
-                            Rectangle r = characterButtons[selectedCharacter].skills[j].rect;
-                            DrawRectangleRec(r, MAROON);
-                            DrawRectangleLinesEx(r, 1, WHITE);
-                            DrawText(characterButtons[selectedCharacter].skills[j].name, r.x + 15, r.y + 20, 18, WHITE);
-                        }
-                        if (characterButtons[selectedCharacter].skills[j].logic.cooldown > 0) {
-                            Rectangle r = characterButtons[selectedCharacter].skills[j].rect;
-                            DrawRectangleRec(r, GRAY);
-                            DrawRectangleLinesEx(r, 1, DARKGRAY);
-                            DrawText("Recharging", r.x + 15, r.y + 20, 18, DARKGRAY);
-                        }
-                    }
-                    break;
-                case MENU_SELECT_CHAR_GUARD:
-                    DrawCharacterButtons(SKYBLUE, BLACK);
-                    break;
-                case MENU_SELECT_CHAR_BAG:
-                    DrawCharacterButtons(GOLD, BLACK);
-                    break;
-                case MENU_BAG_ITEMS:
-                    DrawRectangle(0, 400, 800, 200, DARKGRAY);
-                    for (int i = 0; i < 5; i++) {
-                        if (bag[i].quantity > 0) {
-                            DrawRectangleRec(bag[i].rect, LIGHTGRAY);
-                            DrawRectangleLinesEx(bag[i].rect, 1, BLACK);
-                            DrawText(TextFormat("%s (x%d)", bag[i].name, bag[i].quantity), bag[i].rect.x + 15, bag[i].rect.y + 20, 18, BLACK);
-                        } else {
-                            DrawRectangleRec(bag[i].rect, GRAY);
-                            DrawRectangleLinesEx(bag[i].rect, 1, DARKGRAY);
-                            DrawText("Empty", bag[i].rect.x + 15, bag[i].rect.y + 20, 18, DARKGRAY);
-                        }
-                    }
-                    int backX = 40 + (5 % 3) * 240;
-                    int backY = 420 + (5 / 3) * 80;
-                    DrawRectangle(backX, backY, 220, 60, RED);
-                    DrawRectangleLines(backX, backY, 220, 60, WHITE);
-                    DrawText("BACK", backX + 80, backY + 20, 18, WHITE);  
-                    break;
-                case MENU_ESCAPE_SPARE: 
-                    DrawRectangle(250, 200, 300, 220, DARKGRAY);
-                    DrawRectangleLines(250, 200, 300, 220, WHITE);
-            
-                    DrawRectangle(350, 240, 100, 40, LIGHTGRAY);
-                    DrawText("Escape", 360, 250, 18, BLACK);
-
-                    DrawRectangle(350, 310, 100, 40, LIGHTGRAY);
-                    DrawText("Spare", 365, 320, 18, BLACK);
-                    break;
-                case MENU_CLASH:
-                    DrawRectangle(100, 380, 600, 200, BLACK);
-                    DrawRectangleLines(100, 380, 600, 200, RED);
-                    DrawText("!! ATTACK CLASH !!", 295, 400, 24, ORANGE);
-            
-                    for (int i = 0; i < SEQUENCE_LENGTH; i++) {
-                        Color stepColor = WHITE;
-                        if (i < currentStep) stepColor = GREEN;      
-                        else if (i == currentStep) stepColor = YELLOW; 
-                
-                        if (sequenceNames[i] != NULL) {
-                            DrawText(sequenceNames[i], 160 + (i * 100), 450, 22, stepColor);
-                        }
-                    }
-            
-                    float maxClashTime = 2.5f + (characterButtons[selectedCharacter].logic.stats[STAT_SPD] * 0.1f);
-                    DrawRectangle(200, 520, (int)(400 * (timeRemaining / maxClashTime)), 15, RED);
-                    DrawRectangleLines(200, 520, 400, 15, WHITE);
-                    break;
-            }
-            break;
-        case ENEMY_TURN_STATE:
-            DrawMenuButtons();
-            break;
-        case ROUND_END_STATE:
-            DrawMenuButtons();
-            if (menuState == MENU_ESCAPED) {
-                DrawRectangle(0, 0, 800, 600, BLACK);
-                DrawText("ESCAPED!", 270, 250, 32, SKYBLUE);
-            }
-            if (menuState == MENU_MERCY) {
-                DrawRectangle(0, 0, 800, 600, BLACK);
-                DrawText("MERCY GIVEN!", 270, 250, 32, SKYBLUE);
-            }
-            if (menuState == MENU_VICTORY) {
-                DrawRectangle(0, 0, 800, 600, BLACK);
-                DrawText("VICTORY!", 270, 250, 32, GOLD);
-            }
-            if (menuState == MENU_DEFEAT) {
-                DrawRectangle(0, 0, 800, 600, BLACK);
-                DrawText("DEFEAT...", 270, 250, 32, RED);
-            }
-            break;
-    }  
+    GameDrawTable[gameState](menuState, selectedCharacter);
 }
