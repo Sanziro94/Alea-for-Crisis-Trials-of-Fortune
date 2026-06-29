@@ -29,13 +29,13 @@ bool graziaRicevuta = false;
 
 void InitGameData(void) {
     // Mercenary
-    characterButtons[0].logic = (Character){"Mercenary", {100, 12, 8, 5}, 100, false};
+    characterButtons[0].logic = (Character){"Mercenary", {100, 12, 8, 5}, 100, false, false};
     // Elf
-    characterButtons[1].logic = (Character){"Elf", {80, 10, 5, 12}, 80, false};
+    characterButtons[1].logic = (Character){"Elf", {80, 10, 5, 12}, 80, false, false};
     // Assassin
-    characterButtons[2].logic = (Character){"Assassin", {75, 15, 4, 15}, 75, false};
+    characterButtons[2].logic = (Character){"Assassin", {75, 15, 4, 15}, 75, false, false};
     // Cyborg
-    characterButtons[3].logic = (Character){"Cyborg", {120, 14, 10, 4}, 120, false};
+    characterButtons[3].logic = (Character){"Cyborg", {120, 14, 10, 4}, 120, false, false};
 
     // Assign rectangle positions for skills
     for (int i = 0; i < 4; i++) {
@@ -98,10 +98,11 @@ static void EndTurnLogic(Vector2 mousePos, int* menuState, int* selectedCharacte
     }
     if (enemy->stats[STAT_HP] <= 0 && *menuState != MENU_VICTORY) *menuState = MENU_VICTORY;
     bool allDead = true;
+    int alivePlayers = 0;
     for (int i = 0; i < 4; i++) {
         if (characterButtons[i].logic.stats[STAT_HP] > 0 ) {
             allDead = false;
-            break;
+            alivePlayers++;
         }   
     }
     if (allDead && *menuState != MENU_DEFEAT) *menuState = MENU_DEFEAT;
@@ -112,6 +113,15 @@ static void EndTurnLogic(Vector2 mousePos, int* menuState, int* selectedCharacte
             if (characterButtons[i].skills[j].logic.cooldown > 0)
                 characterButtons[i].skills[j].logic.cooldown--;
         } 
+    }
+    int deadPlayers = 4 - alivePlayers;
+    int currentMaxSottoTurni = maxSottoTurni - deadPlayers;
+    if (sottoTurni >= currentMaxSottoTurni) {
+        for (int i = 0; i < 4; i++) {
+            characterButtons[i].logic.actionDone = false;
+        } 
+        alivePlayers = 0;
+        sottoTurni = 0;
     }
     if (*menuState != MENU_ESCAPED && *menuState != MENU_MERCY && *menuState != MENU_VICTORY && *menuState != MENU_DEFEAT)
         gameState = PLAYER_TURN_STATE;

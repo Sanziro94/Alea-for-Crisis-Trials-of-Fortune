@@ -17,7 +17,8 @@ int main() {
         .name = "Boss Goblin",
         .maxHealth = 500,
         .stats = {500, 24, 5, 8}, // HP, ATK, DEF, SPD
-        .guarding = false
+        .guarding = false,
+        .actionDone = false
     };
 
     InitGameData();

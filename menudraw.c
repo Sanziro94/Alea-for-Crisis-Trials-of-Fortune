@@ -5,11 +5,16 @@
 void DrawCharacterButtons(int selectedCharacter) {
     DrawRectangle(0, 500, 800, 100, DARKGRAY);
     for (int i = 0; i < 4; i++) {
-        DrawRectangleRec(characterButtons[i].rect, LIGHTGRAY);
-        DrawRectangleLinesEx(characterButtons[i].rect, 1, BLACK);
-        DrawText(characterButtons[i].name, characterButtons[i].rect.x + 20, characterButtons[i].rect.y + 30, 20, BLACK);
+        if (characterButtons[i].logic.actionDone == false && characterButtons[i].logic.stats[STAT_HP] > 0 ) {
+            DrawRectangleRec(characterButtons[i].rect, LIGHTGRAY);
+            DrawRectangleLinesEx(characterButtons[i].rect, 1, BLACK);
+            DrawText(characterButtons[i].name, characterButtons[i].rect.x + 20, characterButtons[i].rect.y + 30, 20, BLACK);
+        } else {
+            DrawRectangleRec(characterButtons[i].rect, GRAY);
+            DrawRectangleLinesEx(characterButtons[i].rect, 1, DARKGRAY);
+            DrawText(characterButtons[i].name, characterButtons[i].rect.x + 20, characterButtons[i].rect.y + 30, 20, DARKGRAY);
+        }
     }
-    //Escape Button
     DrawRectangleRec(actionButtons[3].rect, RED);
     DrawRectangleLinesEx(actionButtons[3].rect, 1, WHITE);
     DrawText(actionButtons[3].name, actionButtons[3].rect.x + 13, actionButtons[3].rect.y + 10, 20, WHITE);
@@ -33,7 +38,6 @@ void DrawActionButtons(int selectedCharacter){
             DrawText(actionButtons[i].name, actionButtons[i].rect.x + 40, actionButtons[i].rect.y + 30, 20, BLACK);
         }
     }
-    //Back Button
     DrawRectangle(604, 510, 180, 80, RED);
     DrawRectangleLines(604, 510, 180, 80, WHITE);
     DrawText("BACK", 644, 540, 20, WHITE); 

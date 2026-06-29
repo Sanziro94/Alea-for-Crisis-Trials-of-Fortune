@@ -31,6 +31,7 @@ typedef struct {
     int stats[4];               
     int maxHealth;              
     bool guarding;
+    bool actionDone;
     Skill skills[6];            
 } Character;
 
@@ -56,6 +57,8 @@ extern int guard_stat;
 extern int poisonTurn;
 extern int poisonDamage;
 extern bool isPoisoned;
+extern int sottoTurni;
+extern int maxSottoTurni;
 
 
 // Global Clash state shared with the UI

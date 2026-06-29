@@ -6,18 +6,21 @@
 void MenuCharacters(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen) {
     for (int i = 0; i < 4; i++ ) {
         if (CheckCollisionPointRec(mousePos, characterButtons[i].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && characterButtons[i].logic.stats[STAT_HP] > 0) {
-            *selectedCharacter = i;
-            *menuState = MENU_ACTIONS;
+            if (characterButtons[i].logic.actionDone == false) {
+                *selectedCharacter = i;
+                *menuState = MENU_ACTIONS;
+            }
         }
     }
-    //Escape Button
     if (CheckCollisionPointRec(mousePos, actionButtons[3].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) *menuState = MENU_ESCAPE_SPARE;
 }
 void MenuActions(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen) {
     if (CheckCollisionPointRec(mousePos, actionButtons[0].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) *menuState = MENU_SELECT_SKILL;
     if (CheckCollisionPointRec(mousePos, actionButtons[1].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         ActionGuard(&characterButtons[*selectedCharacter].logic, battleLog, maxLogLen);
-        enemyTargetRandom = true; 
+        enemyTargetRandom = true;
+        sottoTurni++;
+        characterButtons[*selectedCharacter].logic.actionDone = true; 
         gameState = ENEMY_TURN_STATE;
         *menuState = MENU_CHARACTERS;
     }
@@ -35,6 +38,8 @@ void MenuSkills(Vector2 mousePos, int* menuState, int* selectedCharacter, Charac
 
                 if (characterButtons[*selectedCharacter].skills[j].logic.harm == true) {
                     if (rand() % 100 < 15 && j < 3 ) {
+                        sottoTurni++;
+                        characterButtons[*selectedCharacter].logic.actionDone = true;
                         *menuState = MENU_CLASH;
                         return;
                     }
@@ -63,6 +68,8 @@ void MenuSkills(Vector2 mousePos, int* menuState, int* selectedCharacter, Charac
                     enemyTargetRandom = true; 
                     gameState = ENEMY_TURN_STATE;
                 }
+                sottoTurni++;
+                characterButtons[*selectedCharacter].logic.actionDone = true; 
                 *menuState = MENU_CHARACTERS; 
                 break;          
             }
@@ -76,6 +83,8 @@ void MenuItems(Vector2 mousePos, int* menuState, int* selectedCharacter, Charact
                 ActionUseObject(bag[i].itemId, &characterButtons[*selectedCharacter].logic, enemy, battleLog, maxLogLen);
                 bag[i].quantity--;
                 enemyTargetRandom = true;
+                sottoTurni++;
+                characterButtons[*selectedCharacter].logic.actionDone = true; 
                 gameState = ENEMY_TURN_STATE;
                 *menuState = MENU_CHARACTERS;
             }

@@ -16,9 +16,13 @@ Objects objectTable[] = {
 };
 
 int guard_stat = 5;
+
 int poisonTurn = 0;
 int poisonDamage = 0;
 bool isPoisoned = false;
+
+int sottoTurni = 0;
+int maxSottoTurni = 4;
 
 
 int RollDice(int type) {
