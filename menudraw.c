@@ -2,21 +2,39 @@
 #include "raylib.h"
 #include <stdio.h>
 
-void DrawMenuButtons(void){
+void DrawCharacterButtons(int selectedCharacter) {
     DrawRectangle(0, 500, 800, 100, DARKGRAY);
     for (int i = 0; i < 4; i++) {
-        DrawRectangleRec(mainButtons[i].rect, LIGHTGRAY);
-        DrawRectangleLinesEx(mainButtons[i].rect, 1, BLACK);
-        DrawText(mainButtons[i].name, mainButtons[i].rect.x + 40, mainButtons[i].rect.y + 30, 20, BLACK);
+        DrawRectangleRec(characterButtons[i].rect, LIGHTGRAY);
+        DrawRectangleLinesEx(characterButtons[i].rect, 1, BLACK);
+        DrawText(characterButtons[i].name, characterButtons[i].rect.x + 20, characterButtons[i].rect.y + 30, 20, BLACK);
     }
+    DrawRectangleRec(actionButtons[3].rect, RED);
+    DrawRectangleLinesEx(actionButtons[3].rect, 1, WHITE);
+    DrawText(actionButtons[3].name, actionButtons[3].rect.x + 13, actionButtons[3].rect.y + 10, 20, WHITE);
 }
-void DrawCharacterButtons(Color baseColor, Color textColor) {
+void DrawActionButtons(int selectedCharacter){
     DrawRectangle(0, 500, 800, 100, DARKGRAY);
     for (int i = 0; i < 4; i++) {
-        DrawRectangleRec(characterButtons[i].rect, baseColor);
-        DrawRectangleLinesEx(characterButtons[i].rect, 1, textColor);
-        DrawText(characterButtons[i].name, characterButtons[i].rect.x + 20, characterButtons[i].rect.y + 30, 20, textColor);
+        if (i == 0) {
+            DrawRectangleRec(actionButtons[i].rect, MAROON);
+            DrawRectangleLinesEx(actionButtons[i].rect, 1, WHITE);
+            DrawText(actionButtons[i].name, actionButtons[i].rect.x + 40, actionButtons[i].rect.y + 30, 20, WHITE);
+        }
+        if (i == 1) {
+            DrawRectangleRec(actionButtons[i].rect, SKYBLUE);
+            DrawRectangleLinesEx(actionButtons[i].rect, 1, BLACK);
+            DrawText(actionButtons[i].name, actionButtons[i].rect.x + 40, actionButtons[i].rect.y + 30, 20, BLACK);
+        }
+        if (i == 2) {
+            DrawRectangleRec(actionButtons[i].rect, GOLD);
+            DrawRectangleLinesEx(actionButtons[i].rect, 1, BLACK);
+            DrawText(actionButtons[i].name, actionButtons[i].rect.x + 40, actionButtons[i].rect.y + 30, 20, BLACK);
+        }
     }
+    DrawRectangle(604, 510, 180, 80, RED);
+    DrawRectangleLines(604, 510, 180, 80, WHITE);
+    DrawText("BACK", 644, 540, 20, WHITE); 
 }
 void DrawSkill(int selectedCharacter) {
     DrawRectangle(0, 400, 800, 200, DARKGRAY);
@@ -35,7 +53,7 @@ void DrawSkill(int selectedCharacter) {
         }
     }
 }
-void DrawItems(void) {
+void DrawItems(int selectedCharacter) {
     DrawRectangle(0, 400, 800, 200, DARKGRAY);
     for (int i = 0; i < 5; i++) {
         if (bag[i].quantity > 0) {
@@ -54,7 +72,7 @@ void DrawItems(void) {
     DrawRectangleLines(backX, backY, 220, 60, WHITE);
     DrawText("BACK", backX + 80, backY + 20, 18, WHITE);  
 }
-void DrawEscape(void) {
+void DrawEscape(int selectedCharacter) {
     DrawRectangle(250, 200, 300, 220, DARKGRAY);
     DrawRectangleLines(250, 200, 300, 220, WHITE);
             
@@ -79,42 +97,16 @@ void DrawClash(int selectedCharacter){
     DrawRectangle(200, 520, (int)(400 * (timeRemaining / maxClashTime)), 15, RED);
     DrawRectangleLines(200, 520, 400, 15, WHITE);
 }
-void DrawMenuMain(int selectedCharacter) {
-    DrawMenuButtons();
-}
-void DrawMenuSelectAttack(int selectedCharacter) {
-    DrawCharacterButtons(RED, WHITE);
-}
-void DrawMenuSelectSkill(int selectedCharacter) {
-    DrawSkill(selectedCharacter);
-}
-void DrawMenuSelectGuard(int selectedCharacter) {
-    DrawCharacterButtons(SKYBLUE, BLACK);
-}
-void DrawMenuSelectBag(int selectedCharacter) {
-    DrawCharacterButtons(GOLD, BLACK); 
-}
-void DrawMenuBagItems(int selectedCharacter) {
-    DrawItems();
-}
-void DrawMenuEscapeSpare(int selectedCharacter) {
-    DrawEscape();
-}
-void DrawMenuClash(int selectedCharacter) {
-    DrawClash(selectedCharacter);
-}
 void DrawSafety(int selectedCharcater) {
 
 }
 void (*MenuDrawTable[])(int) = {
-    [MENU_MAIN] = DrawMenuMain,       
-    [MENU_SELECT_CHAR_ATTACK] = DrawMenuSelectAttack,  
-    [MENU_SELECT_SKILL] = DrawMenuSelectSkill,  
-    [MENU_SELECT_CHAR_GUARD] = DrawMenuSelectGuard,  
-    [MENU_SELECT_CHAR_BAG] = DrawMenuSelectBag,    
-    [MENU_BAG_ITEMS] = DrawMenuBagItems,
-    [MENU_ESCAPE_SPARE] = DrawMenuEscapeSpare,  
-    [MENU_CLASH] = DrawMenuClash,
+    [MENU_CHARACTERS] = DrawCharacterButtons,       
+    [MENU_ACTIONS] = DrawActionButtons,  
+    [MENU_SELECT_SKILL] = DrawSkill,  
+    [MENU_BAG_ITEMS] = DrawItems,
+    [MENU_ESCAPE_SPARE] = DrawEscape,  
+    [MENU_CLASH] = DrawClash,
     [MENU_ESCAPED] = DrawSafety,
     [MENU_MERCY] = DrawSafety,
     [MENU_VICTORY] = DrawSafety,

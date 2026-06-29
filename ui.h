@@ -6,11 +6,9 @@
 
 typedef enum { PLAYER_TURN_STATE, ENEMY_TURN_STATE, ROUND_END_STATE} States;
 typedef enum {
-    MENU_MAIN,
-    MENU_SELECT_CHAR_ATTACK,
+    MENU_CHARACTERS,
+    MENU_ACTIONS,
     MENU_SELECT_SKILL,
-    MENU_SELECT_CHAR_GUARD,
-    MENU_SELECT_CHAR_BAG,
     MENU_BAG_ITEMS,
     MENU_ESCAPE_SPARE,
     MENU_CLASH,
@@ -45,7 +43,7 @@ struct ObjectUI {
     int quantity;
 };
 
-extern struct Buttons mainButtons[4];
+extern struct Buttons actionButtons[4];
 extern struct CharacterUI characterButtons[4];
 extern struct ObjectUI bag[5];
 extern States gameState;

@@ -5,15 +5,12 @@
 #include "ui.h"
 #include "gameplay.h"
 
-void DrawMenuMain(int selectedCharacter);
-void DrawMenuSelectAttack(int selectedCharacter);
-void DrawMenuSelectSkill(int selectedCharacter);
-void DrawMenuSelectGuard(int selectedCharacter);
-void DrawMenuSelectBag(int selectedCharacter);
-void DrawMenuBagItems(int selectedCharacter);
-void DrawMenuEscapeSpare(int selectedCharacter);
-void DrawMenuEmpty(int selectedCharacter);
-void DrawMenuClash(int selectedCharacter);
+void DrawCharacterButtons(int selectedCharacter);
+void DrawActionButtons(int selectedCharacter);
+void DrawSkill(int selectedCharacter);
+void DrawItems(int selectedCharacter);
+void DrawEscape(int selectedCharacter);
+void DrawClash(int selectedCharacter);
 void DrawSafety(int selectedCharcater);
 
 extern void (*MenuDrawTable[])(int);

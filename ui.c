@@ -5,19 +5,19 @@
 #include <string.h>
 #include <stdlib.h>
 
-struct Buttons mainButtons[4] = {
-    {"Fight",  {16 + 0*196, 510, 180, 80}},
-    {"Guard",  {16 + 1*196, 510, 180, 80}},
-    {"Bag",    {16 + 2*196, 510, 180, 80}}, 
-    {"Escape", {16 + 3*196, 510, 180, 80}}  
-};
-
 struct CharacterUI characterButtons[4] = {
     {"Mercenary", {16 + 0*196, 510, 180, 80}, {{"Normal Skill M1"}, {"Normal Skill M2"}, {"Normal Skill M3"}, {"Piercing Skill M4"}, {"Vampirism Skill M5"}, {"Buff Skill M6"}}},
     {"Elf",       {16 + 1*196, 510, 180, 80}, {{"Normal Skill E1"}, {"Normal Skill E2"}, {"Normal Skill E3"}, {"Piercing Skill E4"}, {"Vampirism Skill E5"}, {"Buff Skill E6"}}},
     {"Assassin",  {16 + 2*196, 510, 180, 80}, {{"Normal Skill A1"}, {"Normal Skill A2"}, {"Normal Skill A3"}, {"Piercing Skill A4"}, {"Vampirism Skill A5"}, {"Buff Skill A6"}}},
     {"Cyborg",    {16 + 3*196, 510, 180, 80}, {{"Normal Skill C1"}, {"Normal Skill C2"}, {"Normal Skill C3"}, {"Piercing Skill C4"}, {"Vampirism Skill C5"}, {"Buff Skill C6"}}}
 };
+struct Buttons actionButtons[4] = {
+    {"Fight",  {16 + 0*196, 510, 180, 80}},
+    {"Guard",  {16 + 1*196, 510, 180, 80}},
+    {"Bag",    {16 + 2*196, 510, 180, 80}}, 
+    {"X", {745, 15, 40, 40}}  
+};
+
 
 struct ObjectUI bag[5];
 static int itemTypesInBag = 5;
@@ -76,7 +76,7 @@ void InitGameData(void) {
     }
 }
 void PlayerTurnLogic (Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen) {
-    if (*menuState >= MENU_MAIN && *menuState <= MENU_DEFEAT)
+    if (*menuState >= MENU_CHARACTERS && *menuState <= MENU_DEFEAT)
         MenuStateTable[*menuState](mousePos, menuState, selectedCharacter, enemy, battleLog, maxLogLen);
 }
 static void EnemyTurnLogic(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen) {
@@ -128,21 +128,21 @@ void UpdateMenuLogic(Vector2 mousePos, int* menuState, int* selectedCharacter, C
         bool clashFinished = ActionClash(&characterButtons[*selectedCharacter].logic, enemy, battleLog, maxLogLen);
         if (clashFinished) {
             gameState = ROUND_END_STATE;
-            *menuState = MENU_MAIN; 
+            *menuState = MENU_CHARACTERS; 
         }
         return;
     }
     GameStateTable[gameState](mousePos, menuState, selectedCharacter, enemy, battleLog, maxLogLen);
 }
 static void DrawPlayerTurn(int menuState, int selectedCharacter) {
-    if (menuState >= MENU_MAIN && menuState <= MENU_DEFEAT)
+    if (menuState >= MENU_CHARACTERS && menuState <= MENU_DEFEAT)
         MenuDrawTable[menuState](selectedCharacter);
 }
 static void DrawEnemyTurn(int menuState, int selectedCharacter) {
-    DrawMenuMain(selectedCharacter);
+    DrawCharacterButtons(selectedCharacter);
 }
 static void DrawTurnEnd(int menuState, int selectedCharacter) {
-    DrawMenuMain(selectedCharacter);
+    DrawCharacterButtons(selectedCharacter);
     if (menuState == MENU_ESCAPED) {
         DrawRectangle(0, 0, 800, 600, BLACK);
         DrawText("ESCAPED!", 270, 250, 32, SKYBLUE);

@@ -3,21 +3,27 @@
 #include <string.h>
 #include <stdlib.h>
 
-void MenuMain(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen) {
-    if (CheckCollisionPointRec(mousePos, mainButtons[0].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) *menuState = MENU_SELECT_CHAR_ATTACK;
-    if (CheckCollisionPointRec(mousePos, mainButtons[1].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) *menuState = MENU_SELECT_CHAR_GUARD;
-    if (CheckCollisionPointRec(mousePos, mainButtons[2].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) *menuState = MENU_SELECT_CHAR_BAG;
-    if (CheckCollisionPointRec(mousePos, mainButtons[3].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) *menuState = MENU_ESCAPE_SPARE;
-}
-void MenuFight(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen) {
-    for (int i = 0; i < 4; i++) {
-        if (characterButtons[i].logic.stats[STAT_HP] > 0) {
-            if (CheckCollisionPointRec(mousePos, characterButtons[i].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+void MenuCharacters(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen) {
+    for (int i = 0; i < 4; i++ ) {
+        if (CheckCollisionPointRec(mousePos, characterButtons[i].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && characterButtons[i].logic.stats[STAT_HP] > 0) {
             *selectedCharacter = i;
-            *menuState = MENU_SELECT_SKILL;
-            }
+            *menuState = MENU_ACTIONS;
         }
     }
+    if (CheckCollisionPointRec(mousePos, actionButtons[3].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) *menuState = MENU_ESCAPE_SPARE;
+}
+void MenuActions(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen) {
+    if (CheckCollisionPointRec(mousePos, actionButtons[0].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) *menuState = MENU_SELECT_SKILL;
+    if (CheckCollisionPointRec(mousePos, actionButtons[1].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        ActionGuard(&characterButtons[*selectedCharacter].logic, battleLog, maxLogLen);
+        enemyTargetRandom = true; 
+        gameState = ENEMY_TURN_STATE;
+        *menuState = MENU_CHARACTERS;
+    }
+    if (CheckCollisionPointRec(mousePos, actionButtons[2].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) *menuState = MENU_BAG_ITEMS;
+    Rectangle backRect = { 604, 510, 180, 80 };
+    if (CheckCollisionPointRec(mousePos, backRect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) 
+        *menuState = MENU_CHARACTERS;
 }
 void MenuSkills(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen) {
     for (int j = 0; j < 6; j++)  {  
@@ -56,33 +62,11 @@ void MenuSkills(Vector2 mousePos, int* menuState, int* selectedCharacter, Charac
                     enemyTargetRandom = true; 
                     gameState = ENEMY_TURN_STATE;
                 }
-                *menuState = MENU_MAIN; 
+                *menuState = MENU_CHARACTERS; 
                 break;          
             }
         }
     } 
-}
-void MenuGuard(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen) {
-    for (int i = 0; i < 4; i++) {
-        if (characterButtons[i].logic.stats[STAT_HP] > 0) {
-            if (CheckCollisionPointRec(mousePos, characterButtons[i].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                ActionGuard(&characterButtons[i].logic, battleLog, maxLogLen);
-                enemyTargetRandom = true; 
-                gameState = ENEMY_TURN_STATE;
-                *menuState = MENU_MAIN;
-            }
-        }
-    }
-}
-void MenuBag(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen) {
-    for (int i = 0; i < 4; i++) {
-        if (characterButtons[i].logic.stats[STAT_HP] > 0) {
-            if (CheckCollisionPointRec(mousePos, characterButtons[i].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                *selectedCharacter = i;
-                *menuState = MENU_BAG_ITEMS;
-            }
-        }
-    }
 }
 void MenuItems(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen){
     for (int i = 0; i < 5; i++) {
@@ -92,13 +76,13 @@ void MenuItems(Vector2 mousePos, int* menuState, int* selectedCharacter, Charact
                 bag[i].quantity--;
                 enemyTargetRandom = true;
                 gameState = ENEMY_TURN_STATE;
-                *menuState = MENU_MAIN;
+                *menuState = MENU_CHARACTERS;
             }
         }
     }
     Rectangle backRect = { 40 + (5 % 3) * 240, 420 + (5 / 3) * 80, 220, 60 };
     if (CheckCollisionPointRec(mousePos, backRect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) 
-        *menuState = MENU_MAIN;  
+        *menuState = MENU_ACTIONS;  
 }
 void MenuEscape(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen) {
     int leaderIdx = 0;
@@ -115,7 +99,7 @@ void MenuEscape(Vector2 mousePos, int* menuState, int* selectedCharacter, Charac
         } else {
             enemyTargetRandom = true;
             gameState = ENEMY_TURN_STATE;
-            *menuState = MENU_MAIN;
+            *menuState = MENU_CHARACTERS;
             }
     }
     if (CheckCollisionPointRec(mousePos, (Rectangle){350, 310, 100, 40}) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
@@ -125,7 +109,7 @@ void MenuEscape(Vector2 mousePos, int* menuState, int* selectedCharacter, Charac
         } else {
             enemyTargetRandom = true;
             gameState = ENEMY_TURN_STATE;
-            *menuState = MENU_MAIN;
+            *menuState = MENU_CHARACTERS;
         }
     }
 }
@@ -133,11 +117,9 @@ void MenuSafety(Vector2 mousePos, int* menuState, int* selectedCharacter, Charac
 
 }
 void (*MenuStateTable[])(Vector2, int* , int* , Character* , char* , int)={
-    [MENU_MAIN] = MenuMain,
-    [MENU_SELECT_CHAR_ATTACK] = MenuFight,
+    [MENU_CHARACTERS] = MenuCharacters,
+    [MENU_ACTIONS] = MenuActions,
     [MENU_SELECT_SKILL] = MenuSkills,
-    [MENU_SELECT_CHAR_GUARD] = MenuGuard,
-    [MENU_SELECT_CHAR_BAG] = MenuBag,
     [MENU_BAG_ITEMS] = MenuItems,
     [MENU_ESCAPE_SPARE] = MenuEscape,
     [MENU_CLASH] = MenuSafety,
