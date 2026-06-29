@@ -10,6 +10,7 @@ void MenuGuard(Vector2 mousePos, int* menuState, int* selectedCharacter, Charact
 void MenuBag(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen);
 void MenuItems(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen);
 void MenuEscape(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen);
+void MenuSafety(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen);
 
 extern void (*MenuStateTable[])(Vector2, int* , int* , Character* , char* , int);
 #endif

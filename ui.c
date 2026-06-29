@@ -76,7 +76,8 @@ void InitGameData(void) {
     }
 }
 void PlayerTurnLogic (Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen) {
-    MenuStateTable[*menuState](mousePos, menuState, selectedCharacter, enemy, battleLog, maxLogLen);
+    if (*menuState >= MENU_MAIN && *menuState <= MENU_DEFEAT)
+        MenuStateTable[*menuState](mousePos, menuState, selectedCharacter, enemy, battleLog, maxLogLen);
 }
 static void EnemyTurnLogic(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen) {
     if (enemyTargetRandom) {
@@ -134,7 +135,8 @@ void UpdateMenuLogic(Vector2 mousePos, int* menuState, int* selectedCharacter, C
     GameStateTable[gameState](mousePos, menuState, selectedCharacter, enemy, battleLog, maxLogLen);
 }
 static void DrawPlayerTurn(int menuState, int selectedCharacter) {
-    MenuDrawTable[menuState](selectedCharacter);
+    if (menuState >= MENU_MAIN && menuState <= MENU_DEFEAT)
+        MenuDrawTable[menuState](selectedCharacter);
 }
 static void DrawEnemyTurn(int menuState, int selectedCharacter) {
     DrawMenuMain(selectedCharacter);

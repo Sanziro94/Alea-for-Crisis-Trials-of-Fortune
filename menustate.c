@@ -129,12 +129,20 @@ void MenuEscape(Vector2 mousePos, int* menuState, int* selectedCharacter, Charac
         }
     }
 }
+void MenuSafety(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen) {
+
+}
 void (*MenuStateTable[])(Vector2, int* , int* , Character* , char* , int)={
-    MenuMain,
-    MenuFight,
-    MenuSkills,
-    MenuGuard,
-    MenuBag,
-    MenuItems,
-    MenuEscape
+    [MENU_MAIN] = MenuMain,
+    [MENU_SELECT_CHAR_ATTACK] = MenuFight,
+    [MENU_SELECT_SKILL] = MenuSkills,
+    [MENU_SELECT_CHAR_GUARD] = MenuGuard,
+    [MENU_SELECT_CHAR_BAG] = MenuBag,
+    [MENU_BAG_ITEMS] = MenuItems,
+    [MENU_ESCAPE_SPARE] = MenuEscape,
+    [MENU_CLASH] = MenuSafety,
+    [MENU_ESCAPED] = MenuSafety,
+    [MENU_MERCY] = MenuSafety,
+    [MENU_VICTORY] = MenuSafety,
+    [MENU_DEFEAT] = MenuSafety
 };

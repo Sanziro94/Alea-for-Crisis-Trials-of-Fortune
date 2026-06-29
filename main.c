@@ -16,7 +16,7 @@ int main() {
     Character enemy = {
         .name = "Boss Goblin",
         .maxHealth = 500,
-        .stats = {500, 24, 5, 8}, // HP, ATK, DEF, SPD
+        .stats = {500, 12, 5, 8}, // HP, ATK, DEF, SPD
         .guarding = false
     };
 

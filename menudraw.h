@@ -14,6 +14,7 @@ void DrawMenuBagItems(int selectedCharacter);
 void DrawMenuEscapeSpare(int selectedCharacter);
 void DrawMenuEmpty(int selectedCharacter);
 void DrawMenuClash(int selectedCharacter);
+void DrawSafety(int selectedCharcater);
 
 extern void (*MenuDrawTable[])(int);
 

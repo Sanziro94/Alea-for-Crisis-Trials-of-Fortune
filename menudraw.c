@@ -103,14 +103,21 @@ void DrawMenuEscapeSpare(int selectedCharacter) {
 void DrawMenuClash(int selectedCharacter) {
     DrawClash(selectedCharacter);
 }
+void DrawSafety(int selectedCharcater) {
+
+}
 void (*MenuDrawTable[])(int) = {
-    DrawMenuMain,       
-    DrawMenuSelectAttack,  
-    DrawMenuSelectSkill,  
-    DrawMenuSelectGuard,  
-    DrawMenuSelectBag,    
-    DrawMenuBagItems,
-    DrawMenuEscapeSpare,  
-    DrawMenuClash 
+    [MENU_MAIN] = DrawMenuMain,       
+    [MENU_SELECT_CHAR_ATTACK] = DrawMenuSelectAttack,  
+    [MENU_SELECT_SKILL] = DrawMenuSelectSkill,  
+    [MENU_SELECT_CHAR_GUARD] = DrawMenuSelectGuard,  
+    [MENU_SELECT_CHAR_BAG] = DrawMenuSelectBag,    
+    [MENU_BAG_ITEMS] = DrawMenuBagItems,
+    [MENU_ESCAPE_SPARE] = DrawMenuEscapeSpare,  
+    [MENU_CLASH] = DrawMenuClash,
+    [MENU_ESCAPED] = DrawSafety,
+    [MENU_MERCY] = DrawSafety,
+    [MENU_VICTORY] = DrawSafety,
+    [MENU_DEFEAT] = DrawSafety
 };
 
