@@ -10,6 +10,7 @@ void MenuCharacters(Vector2 mousePos, int* menuState, int* selectedCharacter, Ch
             *menuState = MENU_ACTIONS;
         }
     }
+    //Escape Button
     if (CheckCollisionPointRec(mousePos, actionButtons[3].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) *menuState = MENU_ESCAPE_SPARE;
 }
 void MenuActions(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen) {
