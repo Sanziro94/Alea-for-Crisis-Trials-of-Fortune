@@ -58,7 +58,6 @@ extern int poisonTurn;
 extern int poisonDamage;
 extern bool isPoisoned;
 extern int sottoTurni;
-extern int maxSottoTurni;
 
 
 // Global Clash state shared with the UI

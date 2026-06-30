@@ -47,7 +47,6 @@ extern struct Buttons actionButtons[4];
 extern struct CharacterUI characterButtons[4];
 extern struct ObjectUI bag[5];
 extern States gameState;
-extern bool enemyTargetRandom;
 extern bool fugaRiuscita;
 extern bool graziaRicevuta;
 

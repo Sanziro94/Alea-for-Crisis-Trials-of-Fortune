@@ -18,9 +18,8 @@ void MenuActions(Vector2 mousePos, int* menuState, int* selectedCharacter, Chara
     if (CheckCollisionPointRec(mousePos, actionButtons[0].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) *menuState = MENU_SELECT_SKILL;
     if (CheckCollisionPointRec(mousePos, actionButtons[1].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         ActionGuard(&characterButtons[*selectedCharacter].logic, battleLog, maxLogLen);
-        enemyTargetRandom = true;
         sottoTurni++;
-        characterButtons[*selectedCharacter].logic.actionDone = true; 
+        characterButtons[*selectedCharacter].logic.actionDone = true;
         gameState = ENEMY_TURN_STATE;
         *menuState = MENU_CHARACTERS;
     }
@@ -52,20 +51,19 @@ void MenuSkills(Vector2 mousePos, int* menuState, int* selectedCharacter, Charac
                             ActionSkill(&characterButtons[*selectedCharacter].logic, enemy, &characterButtons[*selectedCharacter].skills[j].logic, playerLog, sizeof(playerLog));
                             strncat(battleLog, "\n", maxLogLen - strlen(battleLog) - 1);
                             strncat(battleLog, playerLog, maxLogLen - strlen(battleLog) - 1);
+                            gameState = ENEMY_TURN_STATE;
                         } else {
                             strncat(battleLog, "\n...but the hero was knocked out before acting!", maxLogLen - strlen(battleLog) - 1);
                         }
-                        gameState = ROUND_END_STATE;
+                        gameState = ENEMY_TURN_STATE;
                     } 
                     else {
                         ActionSkill(&characterButtons[*selectedCharacter].logic, enemy, &characterButtons[*selectedCharacter].skills[j].logic, battleLog, maxLogLen);
-                        enemyTargetRandom = true; 
                         gameState = ENEMY_TURN_STATE;
                     }
                 } 
                 else {
                     ActionSkill(&characterButtons[*selectedCharacter].logic, enemy, &characterButtons[*selectedCharacter].skills[j].logic, battleLog, maxLogLen);
-                    enemyTargetRandom = true; 
                     gameState = ENEMY_TURN_STATE;
                 }
                 sottoTurni++;
@@ -82,7 +80,6 @@ void MenuItems(Vector2 mousePos, int* menuState, int* selectedCharacter, Charact
             if (CheckCollisionPointRec(mousePos, bag[i].rect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
                 ActionUseObject(bag[i].itemId, &characterButtons[*selectedCharacter].logic, enemy, battleLog, maxLogLen);
                 bag[i].quantity--;
-                enemyTargetRandom = true;
                 sottoTurni++;
                 characterButtons[*selectedCharacter].logic.actionDone = true; 
                 gameState = ENEMY_TURN_STATE;
@@ -107,8 +104,7 @@ void MenuEscape(Vector2 mousePos, int* menuState, int* selectedCharacter, Charac
             fugaRiuscita = true;
             gameState = ROUND_END_STATE;
         } else {
-            enemyTargetRandom = true;
-            gameState = ENEMY_TURN_STATE;
+            EnemyTurnRandomTarget(enemy, battleLog, maxLogLen);
             *menuState = MENU_CHARACTERS;
             }
     }
@@ -117,8 +113,7 @@ void MenuEscape(Vector2 mousePos, int* menuState, int* selectedCharacter, Charac
             graziaRicevuta = true;
             gameState = ROUND_END_STATE;
         } else {
-            enemyTargetRandom = true;
-            gameState = ENEMY_TURN_STATE;
+            EnemyTurnRandomTarget(enemy, battleLog, maxLogLen);
             *menuState = MENU_CHARACTERS;
         }
     }

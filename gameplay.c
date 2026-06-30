@@ -22,7 +22,6 @@ int poisonDamage = 0;
 bool isPoisoned = false;
 
 int sottoTurni = 0;
-int maxSottoTurni = 4;
 
 
 int RollDice(int type) {

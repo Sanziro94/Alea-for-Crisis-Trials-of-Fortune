@@ -18,14 +18,12 @@ struct Buttons actionButtons[4] = {
     {"X", {745, 15, 40, 40}}  
 };
 
-
 struct ObjectUI bag[5];
 static int itemTypesInBag = 5;
 States gameState;
-static int turn;
-bool enemyTargetRandom = false;
 bool fugaRiuscita = false;
 bool graziaRicevuta = false;
+bool allPlayed;
 
 void InitGameData(void) {
     // Mercenary
@@ -64,7 +62,7 @@ void InitGameData(void) {
         }
     }
     // Assign rectangle positions for items
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < itemTypesInBag; i++) {
         bag[i].rect.x = 40 + (i % 3) * 240; 
         bag[i].rect.y = 420 + (i / 3) * 80; 
         bag[i].rect.width = 220;
@@ -75,17 +73,27 @@ void InitGameData(void) {
         else bag[i].quantity = 1;
     }
 }
+static void AllCharPlayed() {
+    allPlayed = true;
+    for (int i = 0; i < 4; i++) {
+        if (characterButtons[i].logic.stats[STAT_HP] > 0 && characterButtons[i].logic.actionDone == false) {
+            allPlayed = false;
+            break;
+        }
+    }
+}
 void PlayerTurnLogic (Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen) {
     if (*menuState >= MENU_CHARACTERS && *menuState <= MENU_DEFEAT)
         MenuStateTable[*menuState](mousePos, menuState, selectedCharacter, enemy, battleLog, maxLogLen);
 }
 static void EnemyTurnLogic(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen) {
-    if (enemyTargetRandom) {
+    AllCharPlayed();
+    if (allPlayed == true) {
         EnemyTurnRandomTarget(enemy, battleLog, maxLogLen);
-        enemyTargetRandom = false;
-    } else 
-        EnemyTurn(enemy, &characterButtons[*selectedCharacter].logic, battleLog, maxLogLen);
-    gameState = ROUND_END_STATE;
+        gameState = ROUND_END_STATE;
+    } else {
+        gameState = PLAYER_TURN_STATE;
+    }
 }
 static void EndTurnLogic(Vector2 mousePos, int* menuState, int* selectedCharacter, Character* enemy, char* battleLog, int maxLogLen) {
     if (fugaRiuscita) *menuState = MENU_ESCAPED;
@@ -98,29 +106,24 @@ static void EndTurnLogic(Vector2 mousePos, int* menuState, int* selectedCharacte
     }
     if (enemy->stats[STAT_HP] <= 0 && *menuState != MENU_VICTORY) *menuState = MENU_VICTORY;
     bool allDead = true;
-    int alivePlayers = 0;
     for (int i = 0; i < 4; i++) {
         if (characterButtons[i].logic.stats[STAT_HP] > 0 ) {
             allDead = false;
-            alivePlayers++;
+            break;
         }   
     }
     if (allDead && *menuState != MENU_DEFEAT) *menuState = MENU_DEFEAT;
 
-    turn++;
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 6; j++) {
             if (characterButtons[i].skills[j].logic.cooldown > 0)
                 characterButtons[i].skills[j].logic.cooldown--;
         } 
     }
-    int deadPlayers = 4 - alivePlayers;
-    int currentMaxSottoTurni = maxSottoTurni - deadPlayers;
-    if (sottoTurni >= currentMaxSottoTurni) {
-        for (int i = 0; i < 4; i++) {
+    AllCharPlayed();
+    if (allPlayed == true) {
+        for (int i = 0; i < 4; i++)
             characterButtons[i].logic.actionDone = false;
-        } 
-        alivePlayers = 0;
         sottoTurni = 0;
     }
     if (*menuState != MENU_ESCAPED && *menuState != MENU_MERCY && *menuState != MENU_VICTORY && *menuState != MENU_DEFEAT)
@@ -137,7 +140,7 @@ void UpdateMenuLogic(Vector2 mousePos, int* menuState, int* selectedCharacter, C
     if (*menuState == MENU_CLASH) {
         bool clashFinished = ActionClash(&characterButtons[*selectedCharacter].logic, enemy, battleLog, maxLogLen);
         if (clashFinished) {
-            gameState = ROUND_END_STATE;
+            gameState = ENEMY_TURN_STATE;
             *menuState = MENU_CHARACTERS; 
         }
         return;
