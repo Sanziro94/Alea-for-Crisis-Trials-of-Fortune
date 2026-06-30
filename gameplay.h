@@ -53,6 +53,7 @@ void EnemyTurn(Character* enemy, Character* target, char* outMessage, int maxMsg
 void EnemyTurnRandomTarget(Character* enemy, char* battleLog, int maxLogLen);
 
 extern Objects objectTable[];
+extern Character enemy;
 extern int guard_stat;
 extern int poisonTurn;
 extern int poisonDamage;

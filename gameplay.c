@@ -15,6 +15,14 @@ Objects objectTable[] = {
     {"Speed Boost", BUFF_SPEED, 3}
 };
 
+Character enemy = {
+        .name = "Boss Goblin",
+        .maxHealth = 500,
+        .stats = {500, 24, 5, 8}, // HP, ATK, DEF, SPD
+        .guarding = false,
+        .actionDone = false
+    };
+
 int guard_stat = 5;
 
 int poisonTurn = 0;
