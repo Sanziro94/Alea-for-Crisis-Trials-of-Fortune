@@ -18,7 +18,7 @@ Objects objectTable[] = {
 Character enemy = {
         .name = "Boss Goblin",
         .maxHealth = 500,
-        .stats = {500, 24, 5, 8}, // HP, ATK, DEF, SPD
+        .stats = {500, 24, 12, 8}, // HP, ATK, DEF, SPD
         .guarding = false,
         .actionDone = false
     };
@@ -28,9 +28,6 @@ int guard_stat = 5;
 int poisonTurn = 0;
 int poisonDamage = 0;
 bool isPoisoned = false;
-
-int sottoTurni = 0;
-
 
 int RollDice(int type) {
     int diceSides[] = {6, 12, 2, 100};
@@ -128,7 +125,6 @@ void ActionGuard(Character* character, char* outMessage, int maxMsgLen)
     character->guarding = true;
     snprintf(outMessage, maxMsgLen, "%s takes a defensive stance!", character->name);
 }
-
 bool ActionEscape(Character* ally, Character* enemy, char* outMessage, int maxMsgLen)
 {
     int escape_chance = RollDice(3); 
@@ -137,7 +133,6 @@ bool ActionEscape(Character* ally, Character* enemy, char* outMessage, int maxMs
     snprintf(outMessage, maxMsgLen, "Escape failed! The enemy blocks your path!");
     return false;
 }
-
 bool ActionSpare(char* outMessage, int maxMsgLen)
 {
     int dice = RollDice(0);

@@ -56,7 +56,7 @@ void InitGameData(void) {
                     if (i == 3) characterButtons[i].skills[j].logic = (Skill){characterButtons[i].skills[j].name, SKILL_BUFF, 1 , false, STAT_DEF, 0};
                     break;
                 default:
-                    characterButtons[i].skills[j].logic = (Skill){characterButtons[i].skills[j].name, SKILL_NORMAL_DAMAGE, 5 + j, true, STAT_HP, 0};
+                    characterButtons[i].skills[j].logic = (Skill){characterButtons[i].skills[j].name, SKILL_NORMAL_DAMAGE, 8 + j, true, STAT_HP, 0};
                     break;
             }
         }
@@ -124,7 +124,6 @@ static void EndTurnLogic(Vector2 mousePos, int* menuState, int* selectedCharacte
     if (allPlayed == true) {
         for (int i = 0; i < 4; i++)
             characterButtons[i].logic.actionDone = false;
-        sottoTurni = 0;
     }
     if (*menuState != MENU_ESCAPED && *menuState != MENU_MERCY && *menuState != MENU_VICTORY && *menuState != MENU_DEFEAT)
         gameState = PLAYER_TURN_STATE;

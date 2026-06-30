@@ -18,7 +18,6 @@ int main() {
     while (!WindowShouldClose()) {
         Vector2 mousePos = GetMousePosition();
         
-        
         UpdateMenuLogic(mousePos, &menuState, &selectedCharacter, &enemy, battleLog, sizeof(battleLog));
         
         BeginDrawing();

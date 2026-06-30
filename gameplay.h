@@ -58,8 +58,6 @@ extern int guard_stat;
 extern int poisonTurn;
 extern int poisonDamage;
 extern bool isPoisoned;
-extern int sottoTurni;
-
 
 // Global Clash state shared with the UI
 extern int currentStep;
